@@ -1,11 +1,14 @@
+const { CODE_ERROR } = require('../utils/constant.js')
 const express = require('express')
 const boom = require('boom')
-const {
-  CODE_ERROR
-} = require('../utils/constant.js')
 const userRouter = require('./user')
+const jwtAuth  = require('./jwt')
+const Result = require('../models/Result')
+
 // 注册路由
 const router = express.Router()
+
+router.use(jwtAuth)
 
 router.get('/', function(req, res) {
   res.send('欢迎管理后台接口')
@@ -29,15 +32,24 @@ router.use((req, res, next) => {
  * 第二，方法的必须放在路由最后
  */
 router.use((err, req, res, next) => {
-  const msg = (err && err.message) || '系统错误'
-  const statusCode = (err.output && err.output.statusCode) || 500;
-  const errorMsg = (err.output && err.output.payload && err.output.payload.error) || err.message
-  res.status(statusCode).json({
-    code: CODE_ERROR,
-    msg,
-    error: statusCode,
-    errorMsg
-  })
+  // 如果是token错误
+  if( err.name === 'UnauthorizedError' ){
+    // 获取err中的status
+    const { status = 401} = err
+    // 使用自定义方法 Result
+    new Result(null,'token请求错误',{
+      error:status,
+      errMsg:err.name
+    }).jwtErr(res.status(status))
+  } else {
+    const msg = ( err && err.message) || '系统错误'
+    const statusCode = (err.output && err.output.statusCode) || 500;
+    const errorMsg = (err.output && err.output.payload && err.output.payload.error) || err.message
+    new Result(null,msg,{
+      error:statusCode,
+      errorMsg
+    }).fail(res.status(statusCode))
+  }
 })
 
 module.exports = router
