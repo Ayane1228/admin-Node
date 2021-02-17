@@ -1078,6 +1078,103 @@ logout({ commit, state, dispatch }) {
 }
 ```
 
+## 权限设置
+
+路由中设置将其放入路由表所需的`roles`,并从服务器端获取访问的role进行判断。
+
+从服务器端获取role数据，前端进行判断，生成动态路由表。
+
+已经完成
+
+# 公告
+
+点击最新通知之后后端查询数据，并将数据返回给前端渲染到页面上。
+
+前端路由为`http://localhost:9527/#/notice/shownotice`调用后端方法。
+
+```vue
+<template>
+  <div>
+    <div id="main">
+    <h3>最新通知</h3>
+    <el-table
+    :data="list"
+    stripe
+    fit
+    highlight-current-row
+    @sort-change="sortChange"
+    style="width: 100%">
+    <el-table-column
+      prop="noticeTime"
+      label="日期"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="noticeTitle"
+      label="题目"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="content"
+      label="简介">
+    </el-table-column>
+    <el-table-column>
+      <el-button type="primary">查看详情</el-button>
+    </el-table-column>
+  </el-table>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+    data() {
+      return {
+        list: []
+      }
+    },
+    methods:{
+      getList(){
+        // 设置data中的list
+        this.$data.list.push({
+          noticeTime: '2009-11-01 15:58:09',
+          noticeTitle: '本科毕业设计（论文）学生题目申报指南 ',
+          content: '学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型'
+        })
+      }
+    },
+    // 钩子函数
+    mounted: function () {
+      this.getList()
+}
+}
+
+</script>
+<style>
+#main{
+  margin: 30px;
+}
+</style>
+```
+
+后端新建`/router/notice.js`文件用于处理所有通知请求。
+
+`index.js`中：
+
+```js
+// 通过 noticeRouter 来处理 /notice 路由，对路由处理进行解耦
+router.use('/notice', noticeRouter)
+```
+
+前端使用axios访问后端notice接口
+
+```
+
+```
+
+
+
+
+
 # 问题
 
 错误：只能访问`http://127.0.0.1:18082/`请求其他都没有响应。
@@ -1274,22 +1371,7 @@ if(token.indexOf('Bearer') === 0)
 
 少写`===`,少写`let token = ''`
 
-报错
+ 
 
-```shell
-PS D:\learn\admin-imooc-node> node .\app.js、
-internal/modules/cjs/loader.js:883
-  throw err;
-  ^
 
-Error: Cannot find module 'D:\learn\admin-imooc-node\app.js、'
-    at Function.Module._resolveFilename (internal/modules/cjs/loader.js:880:15)
-    at Function.Module._load (internal/modules/cjs/loader.js:725:27)
-    at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:72:12)
-    at internal/main/run_main_module.js:17:47 {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-```
 
-解决

@@ -2,6 +2,7 @@ const { CODE_ERROR } = require('../utils/constant.js')
 const express = require('express')
 const boom = require('boom')
 const userRouter = require('./user')
+const noticeRouter = require('./notice')
 const jwtAuth  = require('./jwt')
 const Result = require('../models/Result')
 
@@ -13,8 +14,12 @@ router.use(jwtAuth)
 router.get('/', function(req, res) {
   res.send('欢迎管理后台接口')
 })
+
 // 通过 userRouter 来处理 /user 路由，对路由处理进行解耦
 router.use('/user', userRouter)
+
+// 通过 noticeRouter 来处理 /notice 路由，对路由处理进行解耦
+router.use('/notice', noticeRouter)
 
 /**
  * 集中处理404请求的中间件
