@@ -1084,13 +1084,11 @@ logout({ commit, state, dispatch }) {
 
 从服务器端获取role数据，前端进行判断，生成动态路由表。
 
-已经完成
-
 # 公告
 
 点击最新通知之后后端查询数据，并将数据返回给前端渲染到页面上。
 
-前端路由为`http://localhost:9527/#/notice/shownotice`调用后端方法。
+前端路由为调用后端方法：`http://localhost:18082/#/notice/shownotice`并传递`token`。
 
 ```vue
 <template>
@@ -1126,6 +1124,8 @@ logout({ commit, state, dispatch }) {
   </div>
 </template>
 <script>
+import axios from 'axios'
+import { getToken } from '@/utils/auth'
 export default {
     data() {
       return {
@@ -1135,15 +1135,39 @@ export default {
     methods:{
       getList(){
         // 设置data中的list
-        this.$data.list.push({
-          noticeTime: '2009-11-01 15:58:09',
-          noticeTitle: '本科毕业设计（论文）学生题目申报指南 ',
-          content: '学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型'
-        })
+        this.$data.list.push(
+          // 测试数据
+          // {
+          // noticeTime: '2009-11-01 15:58:09',
+          // noticeTitle: '本科毕业设计（论文）学生题目申报指南 ',
+          // content: '学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型'
+          // }
+        )
+      }
+    },
+    //计算属性获取token
+    computed:{
+      header(){
+        return {
+          Authorization:`Bearer ${getToken()}`
+        }
       }
     },
     // 钩子函数
     mounted: function () {
+      const token = this.header
+      axios.get('http://localhost:18082/notice/shownotice',{
+            // 并保存token到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }})
+
+        .then(function(req){
+          console.log(req);
+        })
+        .catch(function(err){
+          console.log(err);
+        })
       this.getList()
 }
 }
@@ -1165,13 +1189,115 @@ export default {
 router.use('/notice', noticeRouter)
 ```
 
-前端使用axios访问后端notice接口
+获取数据库数据：`service/notice`并导出
+
+```js
+const { querySql,queryOne} = require('../db')
+
+function findNotice() {
+    const sql = `select * from notice`
+    return querySql(sql)
+  }
+
+
+module.exports = {findNotice}
+```
+
+运行sql语句
+
+```sql
+select * from notice
+```
+
+结果：能够查询到数据
+
+`router/notice.js`:
+
+测试能否 在后端查询到数据库数据，执行`findNotice`函数并输出结果。
+
+```js
+const express = require('express')
+const Result = require('../models/Result')
+
+const router = express.Router()
+const { findNotice } = require('../service/notice')
+
+router.get('/shownotice', function(req, res) {
+  console.log('shownotice start');
+  console.log(findNotice())
+})
+
+module.exports = router
+```
+
+执行结果：
+
+```shell
+shownotice start
+SELECT noticeTitle,noticeTime,noticeContent FROM notice
+Promise { <pending> }
+查询成功 [{"noticeTitle":"本科毕业设计（论文）学生题目申报指南 ","noticeTime":"2009-11-01T07:58:09.000Z","noticeContent":"学生可以申报的本科毕业设计（论文）题目分为“ 
+学生自选题目”和“外单位毕设题目”两种类型，“学生自选题目”是指学生自主选择的题目，“外单位毕设题目”是指学生在所在学院以外进行毕业设计的题目。"},{"noticeTitle":"最新公告","noticeTime":"2021-02-20T06:59:51.000Z","noticeContent":"这是一个最新的公告呢日哦那个阿松大啊啊啊"}]
+```
+
+将结果返回到前端
+
+```js
+const express = require('express')
+const Result = require('../models/Result')
+
+const router = express.Router()
+const { findNotice } = require('../service/notice')
+const { all } = require('./user')
+
+// 最新公告
+router.get('/shownotice', function(req, res) {
+  console.log('shownotice start');
+  const notice = findNotice()
+  // notice 是一个Promise对象
+  notice.then( allnotice => {
+    if( allnotice ) {
+      new Result(allnotice,'获取最新公告成功').success(res)
+    } else {
+      new Result('获取最新公告失败').fail(res)
+    }
+  })
+})
+
+module.exports = router
+```
+
+前端处理数据：
+
+​	获取数据：
+
+```js
+console.log(req.data.data)
+```
+
+结果：
+
+```js
+(2) [{…}, {…}]
+0:
+noticeContent: "学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型，“学生自选题目”是指学生自主选择的题目，“外单位毕设题目”是指学生在所在学院以外进行毕业设计的题目。"
+noticeTime: "2009-11-01T07:58:09.000Z"
+noticeTitle: "本科毕业设计（论文）学生题目申报指南 "
+__proto__: Object
+1:
+noticeContent: "这是一个最新的公告呢日哦那个阿松大啊啊啊"
+noticeTime: "2021-02-20T06:59:51.000Z"
+noticeTitle: "最新公告"
+__proto__: Object
+length: 2
+__proto__: Array(0)
+```
+
+直接在`mounted`函数中将数据添加到data中：
 
 ```
 
 ```
-
-
 
 
 
@@ -1363,6 +1489,8 @@ select * from user where username='admin' and password='admin'
 }
 ```
 
+
+
 解决：因为在变量未初始化的情况下就访问变量，`decoded`少打了个ed，
 
 ```js
@@ -1371,7 +1499,63 @@ if(token.indexOf('Bearer') === 0)
 
 少写`===`,少写`let token = ''`
 
- 
 
 
+错误：一直访问`http://localhost:18082/`接口
+
+解决：axios.get('http://localhost:18082/notice/shownotice') 去掉’#‘
+
+
+
+错误：服务器端提示`{ code: -2, msg: 'token请求错误', error: 401, errMsg: 'UnauthorizedError' }`
+
+解决：
+
+login:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNjEzODAxNzM4LCJleHAiOjE2MTM4MDUzMzh9.FXqYctUrIBKlDKdb_TrtEZjGFRFYM4aDWU3efCX-B5w
+```
+
+notice/shownotice:
+
+```
+token: BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNjEzODAxMzIyLCJleHAiOjE2MTM4MDQ5MjJ9.YBPxcTHrUhZJlPmMY_aSupkzzZ4T-f2y2Za9p_TCOYE
+```
+
+修改为
+
+```js
+// 并保存token到请求头中
+headers:{
+    Authorization:token.Authorization
+}})
+```
+
+
+
+错误：钩子函数`mounted`不执行函数`this.getList()`
+
+不能打印this.getList()，将测试数据添加发现函数正常执行，证明函数能够正常执行。
+
+```js
+    methods:{
+      getList(){
+        // 获取req中的数组数据
+        // const noticeArray = req.data.data
+        // console.log(noticeArray)
+        // 设置data中的list
+        this.$data.list.push(
+          // 测试数据
+          {
+          noticeTime: '2009-11-01 15:58:09',
+          noticeTitle: '本科毕业设计（论文）学生题目申报指南 ',
+          content: '学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型'
+          }
+        )
+      }
+    },
+```
+
+说明函数正常执行了，但不能取到`req`的数据。在钩子函数中将`req.data.data导出`再getList函数打印，发现不会执行，改为在钩子函数中直接执行读取数据。
 
