@@ -1293,11 +1293,9 @@ length: 2
 __proto__: Array(0)
 ```
 
-直接在`mounted`函数中将数据添加到data中：
+取得并展示数据
 
-```
 
-```
 
 
 
@@ -1541,10 +1539,6 @@ headers:{
 ```js
     methods:{
       getList(){
-        // 获取req中的数组数据
-        // const noticeArray = req.data.data
-        // console.log(noticeArray)
-        // 设置data中的list
         this.$data.list.push(
           // 测试数据
           {
@@ -1558,4 +1552,10 @@ headers:{
 ```
 
 说明函数正常执行了，但不能取到`req`的数据。在钩子函数中将`req.data.data导出`再getList函数打印，发现不会执行，改为在钩子函数中直接执行读取数据。
+
+
+
+错误：能够取得并查看this.$data中的数据，但打印`this.$data.noticeData`时会变成undefined。
+
+解决：要在回调函数内进行遍历，这样回调函数返回数组数据的顺序和执行遍历的顺序就会一致，因此就不存在异步操作所产生的问题。
 
