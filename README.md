@@ -1090,96 +1090,6 @@ logout({ commit, state, dispatch }) {
 
 前端路由为调用后端方法：`http://localhost:18082/#/notice/shownotice`并传递`token`。
 
-```vue
-<template>
-  <div>
-    <div id="main">
-    <h3>最新通知</h3>
-    <el-table
-    :data="list"
-    stripe
-    fit
-    highlight-current-row
-    @sort-change="sortChange"
-    style="width: 100%">
-    <el-table-column
-      prop="noticeTime"
-      label="日期"
-      width="180">
-    </el-table-column>
-    <el-table-column
-      prop="noticeTitle"
-      label="题目"
-      width="180">
-    </el-table-column>
-    <el-table-column
-      prop="content"
-      label="简介">
-    </el-table-column>
-    <el-table-column>
-      <el-button type="primary">查看详情</el-button>
-    </el-table-column>
-  </el-table>
-    </div>
-  </div>
-</template>
-<script>
-import axios from 'axios'
-import { getToken } from '@/utils/auth'
-export default {
-    data() {
-      return {
-        list: []
-      }
-    },
-    methods:{
-      getList(){
-        // 设置data中的list
-        this.$data.list.push(
-          // 测试数据
-          // {
-          // noticeTime: '2009-11-01 15:58:09',
-          // noticeTitle: '本科毕业设计（论文）学生题目申报指南 ',
-          // content: '学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型'
-          // }
-        )
-      }
-    },
-    //计算属性获取token
-    computed:{
-      header(){
-        return {
-          Authorization:`Bearer ${getToken()}`
-        }
-      }
-    },
-    // 钩子函数
-    mounted: function () {
-      const token = this.header
-      axios.get('http://localhost:18082/notice/shownotice',{
-            // 并保存token到请求头中
-            headers:{
-              Authorization:token.Authorization
-            }})
-
-        .then(function(req){
-          console.log(req);
-        })
-        .catch(function(err){
-          console.log(err);
-        })
-      this.getList()
-}
-}
-
-</script>
-<style>
-#main{
-  margin: 30px;
-}
-</style>
-```
-
 后端新建`/router/notice.js`文件用于处理所有通知请求。
 
 `index.js`中：
@@ -1267,33 +1177,134 @@ router.get('/shownotice', function(req, res) {
 module.exports = router
 ```
 
-前端处理数据：
+前端取得数据处理数据并展示：
 
-​	获取数据：
+```vue
+<template>
+  <div>
+    <div id="main">
+    <h3>最新通知</h3>
+    <el-table
+    :data="list"
+    stripe
+    fit
+    highlight-current-row
+    @sort-change="sortChange"
+    style="width: 100%">
+    <el-table-column
+      prop="noticeTime"
+      label="日期"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="noticeTitle"
+      label="题目"
+      width="600">
+    </el-table-column>
+    <el-table-column>
+      <template slot-scope="scope">
+        <el-button 
+          type="primary" 
+          @click="showContent(scope.$index, scope.row)">
+          查看详情
+        </el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+    </div>
+  </div>
+</template>
 
-```js
-console.log(req.data.data)
+
+<script>
+import axios from 'axios'
+import { getToken } from '@/utils/auth'
+// 导入时间戳转换函数
+import utc2beijing from '../../utils/get-noticeTime'
+export default {
+    data() {
+      return {
+        //数据列表
+        list: []
+      }
+    },
+    methods:{
+      // 展示详情按钮：
+        //点击获取当前列的index和内容
+      showContent(index,row){
+          //设置内容为当前列的内容和标题
+        this.$alert(this.$data.list[index].noticeContent, this.$data.list[index].noticeTitle, {
+            //重新设置类名
+        customClass:"msgBox",
+            //数据为html格式
+        dangerouslyUseHTMLString: true,
+            //不显示确定按钮
+        showConfirmButton:false,
+            //显示取消按钮
+        showCancelButton:true,
+            //取消按钮内容为关闭
+        cancelButtonText:"关闭"
+        })
+         //点击之后的回调函数
+            .then( () =>{
+          console.log('查看详情');
+        }).catch( (err) => {
+          console.log(err);
+        });
+      }
+    },
+    //计算属性：获取token
+    computed:{
+      header(){
+        return {
+          Authorization:`Bearer ${getToken()}`
+        }
+      }
+    },
+    //生命周期函数
+    beforeMount() {
+        //保存token
+      const that = this
+      const token = this.header
+      // 请求后端数据
+      axios.get('http://localhost:18082/notice/shownotice',{
+            // token加到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }
+        })
+          .then( function (res) {
+            //响应结果遍历之后保存到$data.list数组中
+            res.data.data.map( (item) => {
+              //格式化时间
+              item.noticeTime = utc2beijing(item.noticeTime)
+              // 保存
+              that.$data.list.push(item)
+            })
+      }).catch( err => { console.log(err); })
+  },
+}
+</script>
+
+<style>
+#main{
+  margin: 30px;
+}
+.msgBox{
+    //过长显示滚动条
+  overflow: scroll;
+    //关闭底部滚动条
+  overflow-x:hidden ;
+  width: 60%;
+  height: 100%;
+}
+</style>
+
 ```
 
-结果：
 
-```js
-(2) [{…}, {…}]
-0:
-noticeContent: "学生可以申报的本科毕业设计（论文）题目分为“学生自选题目”和“外单位毕设题目”两种类型，“学生自选题目”是指学生自主选择的题目，“外单位毕设题目”是指学生在所在学院以外进行毕业设计的题目。"
-noticeTime: "2009-11-01T07:58:09.000Z"
-noticeTitle: "本科毕业设计（论文）学生题目申报指南 "
-__proto__: Object
-1:
-noticeContent: "这是一个最新的公告呢日哦那个阿松大啊啊啊"
-noticeTime: "2021-02-20T06:59:51.000Z"
-noticeTitle: "最新公告"
-__proto__: Object
-length: 2
-__proto__: Array(0)
-```
 
-取得并展示数据
+
 
 
 
@@ -1558,4 +1569,12 @@ headers:{
 错误：能够取得并查看this.$data中的数据，但打印`this.$data.noticeData`时会变成undefined。
 
 解决：要在回调函数内进行遍历，这样回调函数返回数组数据的顺序和执行遍历的顺序就会一致，因此就不存在异步操作所产生的问题。
+
+
+
+错误：msgBox不够长，有的内容无法显示。
+
+解决：添加属性：`overflow: scroll;`隐藏底部滑动条`overflow-x:hidden`
+
+ 
 
