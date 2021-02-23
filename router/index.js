@@ -42,7 +42,7 @@ router.use((err, req, res, next) => {
     // 获取err中的status
     const { status = 401} = err
     // 使用自定义方法 Result
-    new Result(null,'token请求错误',{
+    new Result(null,'请求过时',{
       error:status,
       errMsg:err.name
     }).jwtErr(res.status(status))

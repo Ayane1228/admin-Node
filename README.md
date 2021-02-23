@@ -1086,6 +1086,8 @@ logout({ commit, state, dispatch }) {
 
 # 公告
 
+## 最新通知
+
 点击最新通知之后后端查询数据，并将数据返回给前端渲染到页面上。
 
 前端路由为调用后端方法：`http://localhost:18082/#/notice/shownotice`并传递`token`。
@@ -1302,11 +1304,219 @@ export default {
 
 ```
 
+## admin-修改通知
+
+前端采用post请求,
+
+```vue
+<template>
+  <div>
+    <div class="newNotice">
+    <div style="margin: 20px 0;"></div>
+    <h3>发布公告</h3>
+    <el-input
+      type="textarea"
+      :autosize="{ minRows: 10, maxRows: 50}"
+      placeholder="请输入内容"
+      v-model="textareaContent">
+    </el-input>
+      <el-button 
+        type="success"
+        @click="submitNotice"
+        >
+        发布新通知
+      </el-button>
+    </div>
+    <hr>
+    <div id="main">
+    <h3>最新通知</h3>
+    <el-table
+    :data="list"
+    stripe
+    fit
+    highlight-current-row
+    style="width: 100%">
+        <el-table-column
+          prop="noticeTime"
+          label="日期"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="noticeTitle"
+          label="题目"
+          width="600">
+        </el-table-column>
+        <el-table-column>
+          <template slot-scope="scope">
+            <el-button 
+              type="primary" 
+              @click="showContent(scope.$index, scope.row)">
+              查看详情
+            </el-button>
+            <el-button type="danger">删除该通知</el-button>
+          </template>
+        </el-table-column>
+    </el-table>
+    </div>
+  </div>
+</template>
 
 
+<script>
+import axios from 'axios'
+import { getToken } from '@/utils/auth'
+// 导入时间戳转换为标准时间函数
+import utc2beijing from '../../utils/get-noticeTime'
 
+export default {
+    data() {
+      return {
+        list: [],
+        textareaContent:null
+      }
+    },
+    //计算属性获取token
+    computed:{
+      header(){
+        return {
+          Authorization:`Bearer ${getToken()}`
+        }
+      }
+    },
+    methods:{
+      //刷新页面
+      reload(){
+        window.location.reload();
+      },
+      // 获取当前列详情的index和内容
+      showContent(index,row){
+        this.$alert(this.$data.list[index].noticeContent, this.$data.list[index].noticeTitle, {
+        customClass:"msgBox",
+        dangerouslyUseHTMLString: true,
+        showConfirmButton:false,
+        showCancelButton:true,
+        cancelButtonText:"关闭"
+        }).then( () =>{
+          console.log('查看详情');
+        }).catch( (err) => {
+          console.log(err);
+        });
+      },
+      // 提交新公告
+      submitNotice(){
+        //判断内容是否为空
+        if (this.$data.textareaContent === null ) {
+            this.$message({
+            type: 'warning',
+            message: '内容不能为空 ' 
+          })
+        } else {
+          this.$prompt('请输入标题', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        }).then(({ value }) => {
+          // 请求发布通知接口
+          // 获取当前的token
+          const token = this.header
+          axios({
+            url:'http://localhost:18082/notice/changenotice',
+            method:'post',
+            // 添加token
+            headers:{
+              Authorization:token.Authorization
+            },
+            data:{
+                noticeTitle:value,
+                noticeContent:this.$data.textareaContent
+                }
+          }).then( (res) =>{
+            // axios响应成功,刷新页面
+            console.log(res);
+          }).catch( (err) => {
+              console.log('请求发布接口失败' + err);
+            })
+        // 发布结束之后的回调    
+        this.$message({
+            type: 'success',
+            message: '发布成功,标题为: ' + value
+          }).then(
+            // 刷新页面
+            setTimeout(this.reload(),30000)
+          ).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '发布失败'
+          })       
+        });
+      })
+    }
+  }
+},
+    beforeMount() {
+      const that = this
+      const token = this.header
+      // 请求后端数据
+      axios.get('http://localhost:18082/notice/shownotice',{
+            // 并保存token到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }
+        }).then( function (res) {
+            //保存到data中
+            res.data.data.map( (item) => {
+              //格式化时间
+              item.noticeTime = utc2beijing(item.noticeTime)
+              // 显示数据
+              that.$data.list.push(item)
+            })
+      }).catch( err => { console.log(err); })
+  },
+}
+</script>
 
+<style>
+#main{
+  margin:30px;
+}
+.msgBox{
+  overflow: scroll; 
+  overflow-x:hidden ;
+  width: 60%;
+  height: 80%;
+}
+.newNotice{
+  margin: 30px;
+}
+.newNotice button{
+  margin-top: 10px;
+}
 
+</style>
+
+```
+
+后端
+
+```js
+//修改公告
+router.post('/changenotice', function(req,res) {
+  // 获取请求数据
+  const newTitle = req.body.noticeTitle;
+  const newContent = req.body.noticeContent;
+  addNotice(newTitle,newContent).then( (res) => {
+    console.log('添加成功');
+  }).catch( (err) =>{
+    console.log('添加公告失败' + err);
+  })
+})
+```
+
+```js
+function addNotice(newTitle,newContent) {
+  // 插入语句
+  return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
+}
+```
 
 
 
@@ -1576,5 +1786,119 @@ headers:{
 
 解决：添加属性：`overflow: scroll;`隐藏底部滑动条`overflow-x:hidden`
 
- 
+  
 
+错误：sql语句执行失败，传入参数不对 
+
+解决：node sql 语句传入参数写法 用 `${}`,
+
+例子：
+
+```js
+// 登录验证用户
+let loginVerification = function (  name , password ) {
+  let _sql = `SELECT * from users where userName= "${name}" and pass = "${password}"` ;
+  return query( _sql)
+}
+```
+
+
+
+错误：能够打印出信息，会报错
+
+```shell
+PS D:\learn\admin-imooc-node> node .\app.js
+Http Server is running on 18082
+title zheshicontent
+INSERT INTO notice VALUES (id,title,Now(),zheshicontent)
+查询失败，原因:{"code":"ER_BAD_FIELD_ERROR","errno":1054,"sqlMessage":"Unknown column 'title' in 'field list'","sqlState":"42S22","index":0,"sql":"INSERT INTO notice VALUES (id,title,Now(),zheshicontent)"}
+(node:8916) UnhandledPromiseRejectionWarning: Error: ER_BAD_FIELD_ERROR: Unknown column 'title' in 'field list'
+    at Query.Sequence._packetToError (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Sequence.js:47:14)
+    at Query.ErrorPacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Query.js:79:18)
+    at Protocol._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:291:23)
+    at Parser._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:433:10)
+    at Parser.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:43:10)
+    at Protocol.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:38:16)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:88:28)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:526:10)
+    at Socket.emit (events.js:315:20)
+    at addChunk (internal/streams/readable.js:309:12)
+    --------------------
+    at Protocol._enqueue (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:144:48)
+    at Connection.query (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:198:25)
+    at D:\learn\admin-imooc-node\db\index.js:20:16
+    at new Promise (<anonymous>)
+    at querySql (D:\learn\admin-imooc-node\db\index.js:18:14)
+    at D:\learn\admin-imooc-node\db\index.js:39:7
+    at new Promise (<anonymous>)
+    at queryOne (D:\learn\admin-imooc-node\db\index.js:38:12)
+    at addNotice (D:\learn\admin-imooc-node\service\notice.js:11:10)
+    at D:\learn\admin-imooc-node\router\notice.js:26:3
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8916) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
+(node:8916) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
+```
+
+```shell
+UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
+(node:8916) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
+```
+
+没有捕获异常，修改，重新查看报错信息。
+
+```shell
+PS D:\learn\admin-imooc-node> node .\app.js
+Http Server is running on 18082
+INSERT INTO notice VALUES (id,title,Now(),zheshicontent)
+查询失败，原因:{"code":"ER_BAD_FIELD_ERROR","errno":1054,"sqlMessage":"Unknown column 'title' in 'field list'","sqlState":"42S22","index":0,"sql":"INSERT INTO notice VALUES (id,title,Now(),zheshicontent)"}
+Error: ER_BAD_FIELD_ERROR: Unknown column 'title' in 'field list'
+    at Query.Sequence._packetToError (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Sequence.js:47:14)
+    at Query.ErrorPacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Query.js:79:18)
+    at Protocol._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:291:23)
+    at Parser._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:433:10)
+    at Parser.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:43:10)
+    at Protocol.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:38:16)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:88:28)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:526:10)
+    at Socket.emit (events.js:315:20)
+    at addChunk (internal/streams/readable.js:309:12)
+    --------------------
+    at Protocol._enqueue (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:144:48)
+    at Connection.query (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:198:25)
+    at D:\learn\admin-imooc-node\db\index.js:20:16
+    at new Promise (<anonymous>)
+    at querySql (D:\learn\admin-imooc-node\db\index.js:18:14)
+    at D:\learn\admin-imooc-node\db\index.js:39:7
+    at new Promise (<anonymous>)
+    at queryOne (D:\learn\admin-imooc-node\db\index.js:38:12)
+    at addNotice (D:\learn\admin-imooc-node\service\notice.js:10:10)
+    at D:\learn\admin-imooc-node\router\notice.js:26:3 {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlMessage: "Unknown column 'title' in 'field list'",
+  sqlState: '42S22',
+  index: 0,
+  sql: 'INSERT INTO notice VALUES (id,title,Now(),zheshicontent)'
+}
+```
+
+主要错误信息：`Error: ER_BAD_FIELD_ERROR: Unknown column 'title' in 'field list'`
+
+查到有人说是字符类型不同导致，使用`typeof（）`打印2个值的类型，均为`string`。数据库中的两个值的类型为`varchar`和`text`。
+
+再次修改sql语句，
+
+```js
+function addNotice(newTitle,newContent) {
+  // 插入语句
+  return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
+}
+```
+
+执行成功。
+
+
+
+错误：不能判断textarea和title是否为空
+
+解决：发现一开始自己初始化值的时候写的是`textareaContent:''`修改为`textareaContent:null`
