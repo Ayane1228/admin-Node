@@ -1518,6 +1518,55 @@ function addNotice(newTitle,newContent) {
 }
 ```
 
+## admin-修改通知
+
+删除通知
+
+前端：
+
+```vue
+<el-button 
+    @click="deleteNotice(scope.$index, scope.row)"
+    type="danger">
+    删除该通知
+</el-button>	
+```
+
+```js
+      // 删除公告
+      deleteNotice(index,row){
+        const deleteNotice = row.noticeTitle;
+        this.$alert(`是否要删除公告:${row.noticeTitle}`, '删除公告', {
+          confirmButtonText: '确定删除'
+        }).then ( () =>{
+            // 获取当前的token
+            const token = this.header
+            axios({
+              url:'http://localhost:18082/notice/deleteNotice',
+              method:"post",
+              headers:{
+                Authorization:token.Authorization
+              },
+              data:{deleteNotice}
+            }).then ( (res) => {
+              console.log(res);
+            }).catch( (err) => {
+              console.log(err);
+            })
+        }).catch( (err) => {
+          console.log(err);
+        });
+      },
+```
+
+​	sql语句
+
+```js
+function deletNotice(deleteNotice) {
+  return queryOne(`DELETE FROM notice WHERE noticeTitle = ${deleteNotice}`)
+}
+```
+
 
 
 # 问题
@@ -1804,7 +1853,7 @@ let loginVerification = function (  name , password ) {
 
 
 
-错误：能够打印出信息，会报错
+错误：添加公告能够打印出信息，会报错
 
 ```shell
 PS D:\learn\admin-imooc-node> node .\app.js
@@ -1902,3 +1951,49 @@ function addNotice(newTitle,newContent) {
 错误：不能判断textarea和title是否为空
 
 解决：发现一开始自己初始化值的时候写的是`textareaContent:''`修改为`textareaContent:null`
+
+ 错误：请求接口 `http://localhost:18082/notice/deleteNotice`报错，错误信息
+
+```js
+{code: -2, msg: "请求过时", error: 401, errMsg: "UnauthorizedError"}
+code: -2
+errMsg: "UnauthorizedError"
+error: 401
+msg: "请求过时"
+```
+
+解决：查看请求头，发现没有token`Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNjE0MTM5MDk4LCJleHAiOjE2MTQxNDI2OTh9.Q-aWByDbBt1Vw4UempCE93dGysZ7aW7hxqo3fISZBvM`
+
+​	查看源代码
+
+```js
+      deleteNotice(index,row){
+        const deleteTitle = row.noticeTitle
+        this.$alert(`是否要删除公告:${deleteTitle}`, '删除公告', {
+          confirmButtonText: '确定删除'
+        }).then ( (deleteTitle) =>{
+            // 获取当前的token
+            const token = this.header
+            axios({
+              url:'http://localhost:18082/notice/deleteNotice',
+              method:"post",
+              header:{
+                Authorization:token.Authorization
+              },
+              data:{deleteTitle}
+            }).then ( (res) => {
+              console.log(res);
+            }).catch( (err) => {
+              console.log(err);
+            })
+        });
+      },
+```
+
+发现header少写了s
+
+
+
+错误：删除数据之后不能刷新页面
+
+解决：？

@@ -10,4 +10,8 @@ function addNotice(newTitle,newContent) {
   return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
 }
 
-module.exports = { findNotice,addNotice }
+function deleteNotice(deleteNoticetitle,deleteNoticeTime) {
+  return queryOne(`DELETE FROM notice WHERE noticeTitle = '${deleteNoticetitle}'`)
+}
+
+module.exports = { findNotice,addNotice,deleteNotice }
