@@ -3,7 +3,7 @@ const Result = require('../models/Result')
 
 const router = express.Router()
 const { findNotice,addNotice,deleteNotice } = require('../service/notice')
-const { all } = require('./user')
+// const { all } = require('./user')
 
 // 获取最新公告
 router.get('/shownotice', function(req, res) {

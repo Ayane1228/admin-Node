@@ -1994,6 +1994,10 @@ msg: "请求过时"
 
 
 
-错误：删除数据之后不能刷新页面
+错误：更新密码接受到参数，但前端报错`axios__WEBPACK_IMPORTED_MODULE_1___default(...)(...).then(...).catc is not a function`
 
-解决：？
+解决：catch少写了h
+
+错误：sql语句没用，直接在navciat中测试`UPDATE studentaccount SET password = '1234' WHERE username = 'studnet'`,发现结果：```Affected rows: 0```
+
+解决：
