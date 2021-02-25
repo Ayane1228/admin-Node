@@ -1998,6 +1998,21 @@ msg: "请求过时"
 
 解决：catch少写了h
 
-错误：sql语句没用，直接在navciat中测试`UPDATE studentaccount SET password = '1234' WHERE username = 'studnet'`,发现结果：```Affected rows: 0```
+错误：无法获取el-cascade 组件的级联选中label和value。
 
 解决：
+
+```html
+          <el-form-item label="专业" >
+            <el-cascader
+            ref="zhuangye"
+            placeholder="专业"
+            :options="newStudentForm.options"
+            filterable></el-cascader>
+```
+
+```js
+// 获取到专业名（第二级）
+console.log(this.$refs['zhuangye'].getCheckedNodes()[0].data.label)
+
+```
