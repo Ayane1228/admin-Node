@@ -1998,9 +1998,11 @@ msg: "请求过时"
 
 解决：catch少写了h
 
-错误：无法获取el-cascade 组件的级联选中label和value。
 
-解决：
+
+错误：无法获取提交的学生的学院和专业信息。
+
+解决：csdn说这样可以获取到label的值，结果只能获得专业信息。
 
 ```html
           <el-form-item label="专业" >
@@ -2015,4 +2017,243 @@ msg: "请求过时"
 // 获取到专业名（第二级）
 console.log(this.$refs['zhuangye'].getCheckedNodes()[0].data.label)
 
+```
+
+```vue
+{
+          value: '信息工程学院',
+          label: '信息工程学院',
+          children: [{
+            value: '信息工程学院/软件工程',
+            label: '软件工程'
+          }, {
+            value: '信息工程学院/软件工程(嵌入式)',
+            label: '软件工程(嵌入式)',
+          }]
+          } 
+```
+
+获取内容
+
+```js
+ const newStudentMagor = this.$refs['zhuangye'].getCheckedNodes()[0].data.value
+```
+
+结果：信息工程学院/软件工程
+
+交给后端处理，分割字符串并传递给数据库。
+
+```js
+router.post('/addStudentAccount',function(req,res){
+    const newSAccount = req.body.newSAccount
+    const newSPassword = req.body.newSPassword
+    const newSName = req.body.newSName
+    const newStudentID = req.body.newStudentID
+    const newStudentClassID = req.body.newStudentClassID
+    const newStudentCollage = req.body.newStudentMajor.split('/')[0]
+    const newStudentMajor  = req.body.newStudentMajor.split('/')[1]
+    newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor)
+    .then((res) => {
+        console.log(res);
+    }).catch( (err) => { 
+        console.log(err);
+    })
+})
+```
+
+获取到结果：信息工程学院 软件工程
+
+运行数据库报错，报错信息
+
+```shell
+PS D:\learn\admin-imooc-node> node .\app.js
+Http Server is running on 18082
+信息工程学院 软件工程
+
+  INSERT INTO studentaccount (username,password,truename,studentID,classID,college,major)
+  VALUES ('123321', '12441','124211','null',
+  'null','信息工程学院,'软件工程'');
+  INSERT INTO user (username,password,role) VALUES ('123321', '12441','student')
+
+查询失败，原因:{"code":"ER_PARSE_ERROR","errno":1064,"sqlMessage":"You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '软件工程'');\n  INSERT INTO user (username,password,role) VALUES ('123321', '' at line 3","sqlState":"42000","index":0,"sql":"\n  
+INSERT INTO studentaccount (username,password,truename,studentID,classID,college,major) \n  VALUES ('123321', '12441','124211','null',\n  'null','信息工程学院,'软件工
+程'');\n  INSERT INTO user (username,password,role) VALUES ('123321', '12441','student')\n  "}
+Error: ER_PARSE_ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '软件工程
+'');
+  INSERT INTO user (username,password,role) VALUES ('123321', '' at line 3
+    at Query.Sequence._packetToError (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Sequence.js:47:14)
+    at Query.ErrorPacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Query.js:79:18)
+    at Protocol._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:291:23)
+    at Parser._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:433:10)
+    at Parser.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:43:10)
+    at Protocol.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:38:16)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:88:28)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:526:10)
+    at Socket.emit (events.js:315:20)
+    at addChunk (internal/streams/readable.js:309:12)
+    --------------------
+    at Protocol._enqueue (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:144:48)
+    at Connection.query (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:198:25)
+    at D:\learn\admin-imooc-node\db\index.js:20:16
+    at new Promise (<anonymous>)
+    at querySql (D:\learn\admin-imooc-node\db\index.js:18:14)
+    at D:\learn\admin-imooc-node\db\index.js:39:7
+    at new Promise (<anonymous>)
+    at queryOne (D:\learn\admin-imooc-node\db\index.js:38:12)
+    at newStudentAccount (D:\learn\admin-imooc-node\service\account.js:16:10)
+    at D:\learn\admin-imooc-node\router\studentAccount.js:39:5 {
+  code: 'ER_PARSE_ERROR',
+  errno: 1064,
+  sqlMessage: "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '软件工程'');\n" 
++
+    "  INSERT INTO user (username,password,role) VALUES ('123321', '' at line 3",
+  sqlState: '42000',
+  index: 0,
+  sql: '\n' +
+    '  INSERT INTO studentaccount (username,password,truename,studentID,classID,college,major) \n' +
+    "  VALUES ('123321', '12441','124211','null',\n" +
+    "  'null','信息工程学院,'软件工程'');\n" +
+    "  INSERT INTO user (username,password,role) VALUES ('123321', '12441','student')\n" +
+    '  '
+}
+```
+
+sql语句最后多复制了一个`'`前面少了个`'`,至此整个问题解决。
+
+
+
+错误：无法显示教师工号信息
+
+解决：发现后端打印数据没有问题，检查前端。
+
+前端信息展示：
+
+```vue
+          <el-form-item label="工号">
+            <span>{{ props.row.newTeacherID }}</span>
+          </el-form-item>
+```
+
+数据定义
+
+```js
+	 	return {
+        newTeacherForm: {
+          newAccount: null,
+          newPassword: null,
+          newName:null,
+          newTeacherID:null,
+        },
+```
+
+获取数据
+
+```vue
+    // 查询数据
+    beforeMount() {
+      const that = this
+      const token = this.header
+      // 请求后端数据
+      axios.get('http://localhost:18082/TeacherAccount/showTeacherAccount',{
+            // 并保存token到请求头中
+            headers:{ Authorization:token.Authorization }
+        }).then( function (res) {
+            //保存到data中
+            res.data.data.map( (item) => {
+              // 显示数据
+              that.$data.tableData.push(item)
+            })
+      }).catch( err => { console.log(err); })
+  },
+```
+
+前端接收数据也没有问题，检查发现前端绑定的数据错误.
+
+修改为
+
+```vue
+          <el-form-item label="工号">
+            <span>{{ props.row.teacherID }}</span>
+          </el-form-item>
+```
+
+ 
+
+添加教师账号无效，检查前端，发现发送数据成功，检查后端，打印出req中的数据
+
+```js
+router.post('/addTeacherAccount',function(req,res){
+    const newTAccount = req.body.newTAccount
+    const newTPassword = req.body.newTPassword
+    const newTName = req.body.newTName
+    const newTeacherID = req.body.newTeacherID
+    console.log(newTAccount,newTPassword,newTName,newTeacherID);
+    newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID).then((res) => {
+        console.log(res);
+    }).catch( (err) => { 
+        console.log(err);
+    })
+})
+```
+
+后端报错，并打印出req中的内容
+
+```shell
+PS D:\learn\admin-imooc-node> node .\app.js
+Http Server is running on 18082
+账号 1234 214241 124241241
+
+  INSERT INTO teacherAccount (username,password,truename,teacherID) VALUES ('账号', '1234','214241','124241241');
+  INSERT INTO user (username,password,role) VALUES ('账号', '1234','teacher')
+
+查询失败，原因:{"code":"ER_NO_DEFAULT_FOR_FIELD","errno":1364,"sqlMessage":"Field 'id' doesn't have a default value","sqlState":"HY000","index":0,"sql":"\n  INSERT INTO teacherAccount (username,password,truename,teacherID) VALUES ('账号', '1234','214241','124241241');\n  INSERT INTO user (username,password,role) VALUES ('账号', '1234','teacher')\n  "}
+Error: ER_NO_DEFAULT_FOR_FIELD: Field 'id' doesn't have a default value
+    at Query.Sequence._packetToError (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Sequence.js:47:14)
+    at Query.ErrorPacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\sequences\Query.js:79:18)
+    at Protocol._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:291:23)
+    at Parser._parsePacket (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:433:10)
+    at Parser.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Parser.js:43:10)
+    at Protocol.write (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:38:16)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:88:28)
+    at Socket.<anonymous> (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:526:10)
+    at Socket.emit (events.js:315:20)
+    at addChunk (internal/streams/readable.js:309:12)
+    --------------------
+    at Protocol._enqueue (D:\learn\admin-imooc-node\node_modules\mysql\lib\protocol\Protocol.js:144:48)
+    at Connection.query (D:\learn\admin-imooc-node\node_modules\mysql\lib\Connection.js:198:25)
+    at D:\learn\admin-imooc-node\db\index.js:20:16
+    at new Promise (<anonymous>)
+    at querySql (D:\learn\admin-imooc-node\db\index.js:18:14)
+    at D:\learn\admin-imooc-node\db\index.js:39:7
+    at new Promise (<anonymous>)
+    at queryOne (D:\learn\admin-imooc-node\db\index.js:38:12)
+    at newTeacherAccount (D:\learn\admin-imooc-node\service\account.js:45:10)
+    at D:\learn\admin-imooc-node\router\teacherAccount.js:35:5 {
+  code: 'ER_NO_DEFAULT_FOR_FIELD',
+  errno: 1364,
+  sqlMessage: "Field 'id' doesn't have a default value",
+  sqlState: 'HY000',
+  index: 0,
+  sql: '\n' +
+    "  INSERT INTO teacherAccount (username,password,truename,teacherID) VALUES ('账号', '1234','214241','124241241');\n" +
+    "  INSERT INTO user (username,password,role) VALUES ('账号', '1234','teacher')\n" +
+    '  '
+}
+```
+
+查看提示信息：提示ID没有默认值
+
+```shell
+原因:{"code":"ER_NO_DEFAULT_FOR_FIELD","errno":1364,"sqlMessage":"Field 'id' doesn't have a default value","sqlState":"HY000","index":0,"sql":"\n  INSERT INTO teacherAccount (username,password,truename,teacherID) VALUES ('账号', '1234','214241','124241241');\n  INSERT INTO user (username,password,role) VALUES ('账号', '1234','teacher')\n  "}
+```
+
+查询失败，修改sql语句
+
+```js
+function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
+  return queryOne(`
+  INSERT INTO teacherAccount (id,username,password,truename,teacherID) VALUES (id,'${newTAccount}', '${newTPassword}','${newTName}','${newTeacherID}');
+  INSERT INTO user (id,username,password,role) VALUES (id,'${newTAccount}', '${newTPassword}','teacher')
+  `)
+}
 ```

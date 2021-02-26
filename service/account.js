@@ -11,10 +11,12 @@ function newStudentPassword(studentUsername,studentPassword) {
                     WHERE studentaccount.username = '${studentUsername}' AND user.username = '${studentUsername}'`)
 }
 // 添加新学生
-function newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentMagor){
+function newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor){
+  console.log(newStudentCollage,newStudentMajor);
   return queryOne(`
-  INSERT INTO studentaccount (username,password,truename,studentID,classID,major) VALUES ('${newSAccount}', '${newSPassword}','${newSName}','${newStudentID}','${newStudentClassID}','${newStudentMagor}');
-  INSERT INTO user (username,password,role) VALUES ('${newSAccount}', '${newSPassword}','student')
+  INSERT INTO studentaccount (id,username,password,truename,studentID,classID,college,major) 
+  VALUES (id,'${newSAccount}', '${newSPassword}','${newSName}','${newStudentID}','${newStudentClassID}','${newStudentCollage}','${newStudentMajor}');
+  INSERT INTO user (id,username,password,role) VALUES (id,'${newSAccount}', '${newSPassword}','student')
   `)
 }
 
@@ -25,6 +27,7 @@ function deleteStudentAccount(deleteStudentAccountName){
   `)
 }
 
+// 教师部分
 function findTeacher() {
   return querySql(`SELECT username,password,truename,teacherID,phone,email FROM teacheraccount`)
 }
@@ -43,8 +46,8 @@ function deleteTeacherAccount(deleteTeacherAccount) {
 
 function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
   return queryOne(`
-  INSERT INTO teacherAccount (username,password,truename,teacherID) VALUES ('${newTAccount}', '${newTPassword}','${newTName}','${newTeacherID}');
-  INSERT INTO user (username,password,role) VALUES ('${newTAccount}', '${newTPassword}','teacher')
+  INSERT INTO teacherAccount (id,username,password,truename,teacherID) VALUES (id,'${newTAccount}', '${newTPassword}','${newTName}');
+  INSERT INTO user (id,username,password,role) VALUES (id,'${newTAccount}', '${newTPassword}','teacher')
   `)
 }
 module.exports = { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount,findTeacher,newTeacherPassword,deleteTeacherAccount,newTeacherAccount }

@@ -31,6 +31,7 @@ router.post('/addTeacherAccount',function(req,res){
     const newTPassword = req.body.newTPassword
     const newTName = req.body.newTName
     const newTeacherID = req.body.newTeacherID
+
     newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID).then((res) => {
         console.log(res);
     }).catch( (err) => { 

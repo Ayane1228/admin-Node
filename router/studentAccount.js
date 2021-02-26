@@ -34,8 +34,10 @@ router.post('/addStudentAccount',function(req,res){
     const newSName = req.body.newSName
     const newStudentID = req.body.newStudentID
     const newStudentClassID = req.body.newStudentClassID
-    const newStudentMagor = req.body.newStudentMagor
-    newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentMagor).then((res) => {
+    const newStudentCollage = req.body.newStudentMajor.split('/')[0]
+    const newStudentMajor  = req.body.newStudentMajor.split('/')[1]
+    newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor)
+    .then((res) => {
         console.log(res);
     }).catch( (err) => { 
         console.log(err);
