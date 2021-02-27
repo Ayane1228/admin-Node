@@ -3,7 +3,6 @@ const Result = require('../models/Result')
 
 const router = express.Router()
 const { findNotice,addNotice,deleteNotice } = require('../service/notice')
-// const { all } = require('./user')
 
 // 获取最新公告
 router.get('/shownotice', function(req, res) {
@@ -29,6 +28,7 @@ router.post('/changenotice', function(req,res) {
     console.log('添加公告失败' + err);
   })
 })
+
 // 删除公告
 router.post('/deleteNotice', function(req,res) {
   const deleteNoticeTitle = req.body.deleteNotice

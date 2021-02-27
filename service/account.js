@@ -50,4 +50,5 @@ function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
   INSERT INTO user (id,username,password,role) VALUES (id,'${newTAccount}', '${newTPassword}','teacher')
   `)
 }
+
 module.exports = { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount,findTeacher,newTeacherPassword,deleteTeacherAccount,newTeacherAccount }

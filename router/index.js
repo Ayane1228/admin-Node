@@ -5,6 +5,7 @@ const userRouter = require('./user')
 const noticeRouter = require('./notice')
 const studentAccount = require('./studentAccount')
 const teacherAccount = require('./teacherAccount')
+const teacherInformation = require('./teacherInformation')
 
 const jwtAuth  = require('./jwt')
 const Result = require('../models/Result')
@@ -28,6 +29,7 @@ router.use('/studentAccount', studentAccount)
 
 router.use('/TeacherAccount',teacherAccount)
 
+router.use('/information',teacherInformation)
 /**
  * 集中处理404请求的中间件
  * 注意：该中间件必须放在正常处理流程之后
@@ -49,7 +51,7 @@ router.use((err, req, res, next) => {
     // 获取err中的status
     const { status = 401} = err
     // 使用自定义方法 Result
-    new Result(null,'请求过时',{
+    new Result(null,'请求超时',{
       error:status,
       errMsg:err.name
     }).jwtErr(res.status(status))
