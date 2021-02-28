@@ -5,7 +5,7 @@ const userRouter = require('./user')
 const noticeRouter = require('./notice')
 const studentAccount = require('./studentAccount')
 const teacherAccount = require('./teacherAccount')
-const teacherInformation = require('./teacherInformation')
+const information = require('./information')
 
 const jwtAuth  = require('./jwt')
 const Result = require('../models/Result')
@@ -29,7 +29,7 @@ router.use('/studentAccount', studentAccount)
 
 router.use('/TeacherAccount',teacherAccount)
 
-router.use('/information',teacherInformation)
+router.use('/information',information)
 /**
  * 集中处理404请求的中间件
  * 注意：该中间件必须放在正常处理流程之后
