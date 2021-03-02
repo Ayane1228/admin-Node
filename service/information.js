@@ -1,7 +1,17 @@
 const { querySql,queryOne} = require('../db')
 
 function findAdminInformation() {
-    return querySql(`SELECT truename,teacherID,phone,email,office FROM adminaccount`)
+    return querySql(`SELECT truename,teacherID,phone,email,office,teacherrank FROM adminaccount`)
+}
+
+function findTeacherInformation(teacherUsername) {
+    return querySql(`SELECT truename,teacherID,phone,email,office,teacherrank FROM teacheraccount WHERE '${teacherUsername}' = username`)
+}
+
+function findStudnetInformation (studentUsername){
+    return querySql(`
+                    SELECT truename,studentID,major,phone,email,introduction
+                    FROM studentaccount WHERE '${studentUsername}' = username`)
 }
 
 function changeAdminInf(trueName,phone,email,office){
@@ -11,15 +21,13 @@ function changeAdminInf(trueName,phone,email,office){
         `)
 }
 
-function findTeacherInformation(teacherUsername) {
-    return querySql(`SELECT truename,teacherID,phone,email,office FROM teacheraccount WHERE '${teacherUsername}' = username`)
+
+function changeTeachertInf(trueName,phone,email,office,teacherrank){
+    return querySql(
+    `   UPDATE teacheraccount SET phone = '${phone}', email = '${email}',office = '${office}', teacherrank = '${teacherrank}' 
+        WHERE truename = '${trueName}'`)
 }
 
-function findStudnetInformation (studentUsername){
-    return querySql(`
-                    SELECT truename,studentID,major,phone,email,introduction
-                    FROM studentaccount WHERE '${studentUsername}' = username`)
-}
 
 function changeStudentInf(trueName,phone,email,introduction){
     return querySql(
@@ -29,4 +37,4 @@ function changeStudentInf(trueName,phone,email,introduction){
 }
  
 
-module.exports = { findAdminInformation,findTeacherInformation,changeAdminInf,findStudnetInformation,changeStudentInf }
+module.exports = { findAdminInformation,findTeacherInformation,findStudnetInformation,changeAdminInf,changeTeachertInf,changeStudentInf }

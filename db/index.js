@@ -46,10 +46,6 @@
         reject(err)
       })
     })
-
-
-
-    
   }
 
   module.exports = {querySql,queryOne}

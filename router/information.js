@@ -1,9 +1,9 @@
 const express = require('express')
 const Result = require('../models/Result')
-const { findAdminInformation, findTeacherInformation,changeAdminInf,findStudnetInformation,changeStudentInf } = require('../service/information.js')
+const { findAdminInformation, findTeacherInformation,findStudnetInformation,changeAdminInf,changeTeachertInf,changeStudentInf } = require('../service/information.js')
 const router = express.Router()
 
-
+// 获得管理员/教师信息
 router.get('/teacherInformation', function (req,res) {
     if (req.user.username == 'admin') {
         const findAdminInf = findAdminInformation()
@@ -30,6 +30,7 @@ router.get('/teacherInformation', function (req,res) {
     }
 })
 
+// 修改管理员信息
 router.post('/adminChangeInf',function (req,res) {
     changeAdminInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
         .then( (res) => {
@@ -39,12 +40,15 @@ router.post('/adminChangeInf',function (req,res) {
         })
 })
 
+// 修改教师信息
 router.post('/teacherChangeInf',function (req,res) {
-    changeStudentInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
+    console.log(req.body);
+    changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
         .then( (res) => {
-            new Result('成功').success(res)
+            new Result('修改教师成功').success(res)
         }).catch( (err) => {
-            new Result('失败').fail(res)
+            console.log(err);
+            new Result('失败123').fail(res)
         })
 })
 

@@ -29,7 +29,7 @@ function deleteStudentAccount(deleteStudentAccountName){
 
 // 教师部分
 function findTeacher() {
-  return querySql(`SELECT username,password,truename,teacherID,phone,email FROM teacheraccount`)
+  return querySql(`SELECT username,password,truename,teacherID,phone,email,teacherrank FROM teacheraccount`)
 }
 
 function newTeacherPassword(teacherUsername,teacherPassword) {
@@ -46,7 +46,7 @@ function deleteTeacherAccount(deleteTeacherAccount) {
 
 function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
   return queryOne(`
-  INSERT INTO teacherAccount (id,username,password,truename,teacherID) VALUES (id,'${newTAccount}', '${newTPassword}','${newTName}');
+  INSERT INTO teacherAccount (id,username,password,truename,teacherID) VALUES (id,'${newTAccount}', '${newTPassword}','${newTName}','${newTeacherID}');
   INSERT INTO user (id,username,password,role) VALUES (id,'${newTAccount}', '${newTPassword}','teacher')
   `)
 }
