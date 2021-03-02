@@ -1,7 +1,7 @@
 const { querySql,queryOne} = require('../db')
 
-findSelect(){
-    
+function addSelect(teacherName){
+    return querySql(`SELECT truename,phone,email,office,teacherrank FROM teacheraccount WHERE username = '${teacherName}' `)
 }
 
-module.exports = { findSelect }
+module.exports = { addSelect }

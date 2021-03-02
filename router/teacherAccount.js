@@ -28,14 +28,6 @@ router.post('/changeTeacherAccount', function (req,res) {
 })
 
 //添加教师账号
-/**
- * 原因:{"code":"ER_WRONG_VALUE_COUNT_ON_ROW","errno":1136,
- * "sqlMessage":"Column count doesn't match value count at row 1",
- * "sqlState":"21S01","index":0,
- * "sql":"\n  
- * INSERT INTO teacherAccount (id,username,password,truename,teacherID) VALUES (id,'hongdou', 'hongdou','红豆');
- * \n  INSERT INTO user (id,username,password,role) VALUES (id,'hongdou', 'hongdou','teacher')\n  "}
- */
 router.post('/addTeacherAccount',function(req,res){
     const newTAccount = req.body.newTAccount
     const newTPassword = req.body.newTPassword
