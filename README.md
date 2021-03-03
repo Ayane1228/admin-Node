@@ -2255,3 +2255,37 @@ function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
   `)
 }
 ```
+
+错误：
+
+```shell
+  code: 'ER_DUP_ENTRY',
+  errno: 1062,
+  sqlMessage: "Duplicate entry '0' for key 'select_table.PRIMARY'",
+  sqlState: '23000',
+  index: 0,
+  sql: '   INSERT INTO select_table (id,title,teachername,major,content,istrue,personnumber)\n' +
+    "            VALUES (id, '浅谈信息技术对未来医学教育的影响', '张三', '信息工程学院/软件工程(嵌入式)', '（1）采用了JSP技术 和Web前端技术\n" +
+    '（2）使用My SQL或者SQL Server实现用户数据信息的存储和管理； \n' +
+    '（3）服务器采用了占用内存较小的轻量服务器Tomcat； \n' +
+    '（4）使用软件工程技术实现对系统开发过程的管理。\n' +
+    "', '1','3') \n" +
+    '        '
+}
+```
+
+没有设置id自增
+
+
+
+错误：无法获取到当前列的信息
+
+动态绑定`el-tag`的`type`，帮助用户判断当前课题是否可选。使用插槽。
+
+```vue
+            <template slot-scope="scope">
+            <!-- 三元运算符定义tag的内容 -->
+            <el-tag :type="isTrue=='可选' ? 'success' : 'danger'" >{{scope.row.isTrue}}</el-tag>
+            </template>
+```
+
