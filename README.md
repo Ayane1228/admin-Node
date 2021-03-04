@@ -2289,3 +2289,30 @@ function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
             </template>
 ```
 
+
+
+问题：通过选题表中的教师信息查找到教师表中的信息
+
+```js
+function allSelect() {
+    return querySql(`SELECT title,teachername,major,content,istrue FROM select_table`)
+}
+```
+
+只能查找到select_table中的内容，还需要`teacheraccount`中`teachername`相同的行的`phone,email,teacherrank`信息。
+
+```
+SELECT
+	select_table.title,
+	select_table.teachername,
+	select_table.major,
+	select_table.content,
+	select_table.istrue,
+	teacheraccount.phone,
+	teacheraccount.email,
+	teacheraccount.teacherrank
+FROM
+	select_table
+	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename;
+```
+

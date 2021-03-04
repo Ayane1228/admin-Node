@@ -33,7 +33,17 @@ router.post('/addSelect',function (req,res) {
 })
 
 // 选择课题
-router.get('/allSelect',function(req,res) {0
+router.get('/allSelect',function(req,res) {
     console.log(req);
+    const select = allSelect()
+    select.then( (allSelect) => {
+        if (allSelect) {
+            new Result(allSelect,'获取选题成功').success(res)
+        } else {
+            new Result('获取选题失败').fail(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
 })
 module.exports = router
