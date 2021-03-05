@@ -1,6 +1,6 @@
 const express = require('express')
 const Result = require('../models/Result')
-const {showAddSelect,addSelect,allSelect }  = require('../service/select')
+const {showAddSelect,addSelect,allSelect,ifStudendtAccount,choiceSelect }  = require('../service/select')
 
 const router = express.Router()
 
@@ -32,7 +32,7 @@ router.post('/addSelect',function (req,res) {
     })
 })
 
-// 选择课题
+// 查看课题
 router.get('/allSelect',function(req,res) {
     console.log(req);
     const select = allSelect()
@@ -46,4 +46,28 @@ router.get('/allSelect',function(req,res) {
         console.log(err);
     })
 })
+
+// 判断是否为学生账号并进行进行选题操作
+router.post('/ifstudendtaccount',function(req,res) {
+    ifStudendtAccount(req.user.username).then( (response) =>{
+        if(response.length === 0){
+            res.send('0')
+        } else {
+            console.log(req.user.username);
+            console.log(req.body.row.title);
+            choiceSelect(req.user.username,req.body.row.title)
+            .then( (reses) => {
+                reses.send('1')
+                console.log(reses);
+            }).catch( (errs) => {
+                console.log(errs);
+            })
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+
+
+
 module.exports = router

@@ -1569,6 +1569,57 @@ function deletNotice(deleteNotice) {
 
 
 
+## 学生点击选择课题
+
+请求数据 ： `req.user.username`,`row`登陆账号账号的用户名和当前点击的行的信息。
+
+接受到请求，
+
+先去判断`row.istrue`的值，
+
+再将`select`表添加请求学生信息，将学生的`username`添加到`select`表中给老师查看相关课题当前提交请求的学生信息，当选择的学生数量超过3个时或是老师确定最终人选时，将`select`的istrue修改为不可选择。
+
+当选定时将最终学生添加到`select`表中。
+
+> 前端部分修改：将按钮的disable属性和istrue绑定，如果istrue为可选，则disable为false。
+>
+> ```js
+>               <el-button 
+>                   type="primary" 
+>                   @click="submit(scope.row)" 
+>                   :disabled="scope.row.istrue== '不可选' "
+>                 >确认选择
+>               </el-button>
+> ```
+
+后端sql语句
+
+> 学生选择选题
+>
+> 1.判断当前选题的 istrue是否为可选且personnumber的值大于0
+>
+> 2.将可选人数personnumber减一，当personnumber为0时，设置istrue为不可选
+>
+> 3.select表中新增一列存放选题人名字 
+>
+> 4.studentaccount表中存放当前选择的选题信息
+
+sql中判断`istrue`和`personnumber`的值,
+
+​	查询测试
+
+```
+
+```
+
+
+
+
+
+
+
+
+
 # 问题
 
 错误：只能访问`http://127.0.0.1:18082/`请求其他都没有响应。
@@ -2301,7 +2352,9 @@ function allSelect() {
 
 只能查找到select_table中的内容，还需要`teacheraccount`中`teachername`相同的行的`phone,email,teacherrank`信息。
 
-```
+使用左连接查询
+
+```js
 SELECT
 	select_table.title,
 	select_table.teachername,
@@ -2314,5 +2367,74 @@ SELECT
 FROM
 	select_table
 	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename;
+```
+
+
+
+错误：点击选择时查询该点击的用户是否为学生,先查詢數據庫中的表中的數據，如果不存在，則會返回一個長度為0的數組。再判斷數組長度之後，發送不同的res。
+
+```js
+function ifStudendtAccount(username) {
+	return querySql(`
+		select * from studentaccount where username ='${username}';
+	`)
+}
+```
+
+```js
+router.post('/choiceSelect',function(req,res) {
+    ifStudendtAccount(req.user.username).then( (res) =>{
+        if(res.length === 0){
+            res.send('非学生账号，无法选择选题')
+        } else {
+            res.send(1)
+            console.log('學生賬號');
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+```
+
+报错：
+
+```shell
+PS D:\learn\admin-node> node .\app.js
+Http Server is running on 18082
+
+                select * from studentaccount where username ='admin';
+
+查询成功
+TypeError: res.send is not a function
+    at D:\learn\admin-node\router\select.js:53:17
+    at processTicksAndRejections (internal/process/task_queues.js:93:5)
+
+```
+
+两个异步请求的res不相同,
+
+解决：修改其中一个的形参，避免重复。
+
+```js
+router.post('/choiceSelect',function(req,res) {
+    ifStudendtAccount(req.user.username).then( (response) =>{
+        if(response.length === 0){
+            res.send('非学生账号，无法选择选题')
+        } else {
+            res.send(1)
+            console.log('學生賬號');
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+```
+
+错误：`sql`语句中使用判断条件
+
+解决
+
+```sql
+
 ```
 
