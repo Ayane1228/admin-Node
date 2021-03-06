@@ -1,58 +1,58 @@
+const { query } = require('express-validator')
 const { querySql,queryOne} = require('../db')
 
+// 添加选题时的默认信息
 function showAddSelect(teacherName){
-    return querySql(`SELECT truename,phone,email,office,teacherrank FROM teacheraccount WHERE username = '${teacherName}' `)
+    return querySql(`
+			SELECT truename,phone,email,office,teacherrank 
+			FROM teacheraccount 
+			WHERE username = '${teacherName}' `)
 }
+
+// 创建新选题
 function addSelect(newTitle,teacherName,newMajor,newContent){
     // 3表示最多有三人可选该选题
     return querySql(
         `   INSERT INTO select_table (id,title,teachername,major,content,istrue,personnumber)
-            VALUES (id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选','3') 
+            VALUES (id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选') 
         `)
 }
 
 //显示选题表信息
 function allSelect() {
-    //连接查询
-    return querySql(`    SELECT
-	select_table.title,
-	select_table.teachername,
-	select_table.major,
-	select_table.content, 
-	select_table.istrue,
-	teacheraccount.phone,
-	teacheraccount.email,
-	teacheraccount.teacherrank
+    return querySql(`    
+	SELECT
+		select_table.title,
+		select_table.teachername,
+		select_table.major,
+		select_table.content, 
+		select_table.istrue,
+		teacheraccount.phone,
+		teacheraccount.email,
+		teacheraccount.teacherrank
     FROM
-	select_table
+		select_table
 	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename`)
+}
 
+// 2个参数 当前登录的用户名，当前点击的选题题目
+function choiceSelect(username,title){	
+	return querySql(`
+	SELECT
+	IF
+		( ( SELECT USER.role FROM USER WHERE USER.username  = '${username}') = 'student', 'true', 'false' )
+	`)
 
 }
 
-// 确定选题账号是否在学生表中
-function ifStudendtAccount(username) {
+// 添加学生到选择名单中
+function addStundetToSelect(username,title){
 	return querySql(`
-		select * from studentaccount where username ='${username}';
+	UPDATE select_table 
+	SET choicestudent = '${username}',istrue = '不可选' 
+	WHERE
+		title = '${title}'
 	`)
 }
 
-// 学生选择选题
-// 1.判断当前选题的 istrue是否为可选且personnumber的值大于0
-// 2.将可选人数personnumber减一，当personnumber为0时，设置istrue为不可选
-// 3.select表中新增一列存放选题人名字 
-// 4.studentaccount表中存放当前选择的选题信息
-function choiceSelect(studentName,selectTitle) {
-	return querySql(`
-		SELECT * FROM select_table 
-		WHERE title = '${selectTitle}'
-		if( (istrue = '可选'),(personnumber > 0) )
-	`)
-}
-
-
-
-
-
-
-module.exports = { showAddSelect,addSelect,allSelect,ifStudendtAccount,choiceSelect }
+module.exports = { showAddSelect,addSelect,allSelect,choiceSelect,addStundetToSelect }

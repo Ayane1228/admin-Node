@@ -1,10 +1,10 @@
 const express = require('express')
 const Result = require('../models/Result')
-const {showAddSelect,addSelect,allSelect,ifStudendtAccount,choiceSelect }  = require('../service/select')
+const {showAddSelect,addSelect,allSelect,choiceSelect,addStundetToSelect }  = require('../service/select')
 
 const router = express.Router()
 
-// 进入页面，自动填写默认信息
+// 进入添加选题页面，自动填写默认信息
 router.get('/showSelect', function (req,res) {
     if (req.user.username === 'admin') {
         res.send('管理员无权添加选题')
@@ -34,7 +34,6 @@ router.post('/addSelect',function (req,res) {
 
 // 查看课题
 router.get('/allSelect',function(req,res) {
-    console.log(req);
     const select = allSelect()
     select.then( (allSelect) => {
         if (allSelect) {
@@ -48,25 +47,22 @@ router.get('/allSelect',function(req,res) {
 })
 
 // 判断是否为学生账号并进行进行选题操作
-router.post('/ifstudendtaccount',function(req,res) {
-    ifStudendtAccount(req.user.username).then( (response) =>{
-        if(response.length === 0){
-            res.send('0')
-        } else {
-            console.log(req.user.username);
-            console.log(req.body.row.title);
-            choiceSelect(req.user.username,req.body.row.title)
-            .then( (reses) => {
-                reses.send('1')
-                console.log(reses);
-            }).catch( (errs) => {
-                console.log(errs);
+router.post('/choiceSelect',function(require,response) {
+    choiceSelect(require.user.username,require.body.row.title).then( (res) => {
+        if (res = 'true') {
+            addStundetToSelect(require.user.username,require.body.row.title).then( (res2) => {
+                console.log(res2);
+            }).catch( (err2) => {
+                console.log(err2);
             })
+        } else {
+            response.send('不能选题')
         }
     }).catch( (err) => {
         console.log(err);
     })
 })
+
 
 
 

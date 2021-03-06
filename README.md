@@ -2430,11 +2430,5 @@ router.post('/choiceSelect',function(req,res) {
 })
 ```
 
-错误：`sql`语句中使用判断条件
 
-解决
-
-```sql
-
-```
 
