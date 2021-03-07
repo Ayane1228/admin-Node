@@ -19,7 +19,7 @@ function addSelect(newTitle,teacherName,newMajor,newContent){
 }
 
 //显示选题表信息
-function allSelect() {
+function allSelect(username) {
     return querySql(`    
 	SELECT
 		select_table.title,
@@ -35,24 +35,30 @@ function allSelect() {
 	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename`)
 }
 
-// 2个参数 当前登录的用户名，当前点击的选题题目
-function choiceSelect(username,title){	
+// 判断是否是学生账号
+function ifStudent(username) {
 	return querySql(`
 	SELECT
-	IF
-		( ( SELECT USER.role FROM USER WHERE USER.username  = '${username}') = 'student', 'true', 'false' )
+		role 
+	FROM
+		user 
+	WHERE
+		username = '${ username }'
 	`)
-
 }
 
 // 添加学生到选择名单中
-function addStundetToSelect(username,title){
+function choiceSelect(username,title){
 	return querySql(`
 	UPDATE select_table 
 	SET choicestudent = '${username}',istrue = '不可选' 
 	WHERE
-		title = '${title}'
+		title = '${title}';
+	UPDATE studentaccount 
+	SET choiceselect = '${title}'
+	WHERE
+		username = '${username}';
 	`)
 }
 
-module.exports = { showAddSelect,addSelect,allSelect,choiceSelect,addStundetToSelect }
+module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect }

@@ -1,6 +1,6 @@
 const express = require('express')
 const Result = require('../models/Result')
-const {showAddSelect,addSelect,allSelect,choiceSelect,addStundetToSelect }  = require('../service/select')
+const {showAddSelect,addSelect,allSelect,ifStudent,choiceSelect }  = require('../service/select')
 
 const router = express.Router()
 
@@ -34,7 +34,7 @@ router.post('/addSelect',function (req,res) {
 
 // 查看课题
 router.get('/allSelect',function(req,res) {
-    const select = allSelect()
+    const select = allSelect(req.user.username)
     select.then( (allSelect) => {
         if (allSelect) {
             new Result(allSelect,'获取选题成功').success(res)
@@ -46,22 +46,29 @@ router.get('/allSelect',function(req,res) {
     })
 })
 
-// 判断是否为学生账号并进行进行选题操作
-router.post('/choiceSelect',function(require,response) {
-    choiceSelect(require.user.username,require.body.row.title).then( (res) => {
-        if (res = 'true') {
-            addStundetToSelect(require.user.username,require.body.row.title).then( (res2) => {
-                console.log(res2);
-            }).catch( (err2) => {
-                console.log(err2);
-            })
+// 判断是否为学生账号
+router.get('/isStudent',function(req,res) {
+    const ifstudent = ifStudent(req.user.username)
+    ifstudent.then( (ifstudent) => {
+        if (ifstudent) {
+            new Result(ifstudent,'判断学生成功').success(res)
         } else {
-            response.send('不能选题')
+            new Result('判断学生失败').fail(res)
         }
     }).catch( (err) => {
         console.log(err);
     })
 })
+
+// 选题
+router.post('/choiceSelect',function(req,res) {
+    choiceSelect(req.user.username,req.body.row.title).then( (res) => {
+        console.log(res);
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+
 
 
 
