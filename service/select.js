@@ -1,7 +1,7 @@
 const { query } = require('express-validator')
 const { querySql,queryOne} = require('../db')
 
-// 添加选题时的默认信息
+// 创建选题时的默认信息
 function showAddSelect(teacherName){
     return querySql(`
 			SELECT truename,phone,email,office,teacherrank 
@@ -10,16 +10,15 @@ function showAddSelect(teacherName){
 }
 
 // 创建新选题
-function addSelect(newTitle,teacherName,newMajor,newContent){
-    // 3表示最多有三人可选该选题
+function addSelect(newTitle,teacherName,newMajor,newContent,teacheraccount){
     return querySql(
-        `   INSERT INTO select_table (id,title,teachername,major,content,istrue,personnumber)
-            VALUES (id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选') 
+        `   INSERT INTO select_table (id,title,teachername,major,content,istrue,teacheraccount)
+            VALUES (id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选','${teacheraccount}') 
         `)
 }
 
 //显示选题表信息
-function allSelect(username) {
+function allSelect() {
     return querySql(`    
 	SELECT
 		select_table.title,
@@ -61,4 +60,20 @@ function choiceSelect(username,title){
 	`)
 }
 
-module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect }
+// 查看教师的选题结果
+function teacherSelect(teachername) {
+	querySql(`
+			SELECT
+			title,
+			major,
+			choicestudent 
+		FROM
+			select_table 
+		WHERE
+			teacheraccount = '${teachername}';
+	`)
+}
+
+
+
+module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect }

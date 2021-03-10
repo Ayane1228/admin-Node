@@ -1,10 +1,10 @@
 const express = require('express')
 const Result = require('../models/Result')
-const {showAddSelect,addSelect,allSelect,ifStudent,choiceSelect }  = require('../service/select')
+const { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect }  = require('../service/select')
 
 const router = express.Router()
 
-// 进入添加选题页面，自动填写默认信息
+// 添加选题页面，自动填写默认信息
 router.get('/showSelect', function (req,res) {
     if (req.user.username === 'admin') {
         res.send('管理员无权添加选题')
@@ -25,7 +25,7 @@ router.get('/showSelect', function (req,res) {
 // 发布选题
 router.post('/addSelect',function (req,res) {
     const result = req.body
-    addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent).then( (res) => {
+    addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent,req.user.username).then( (res) => {
         console.log(res);
     }).catch( (err) => {
         console.log(err);
@@ -34,7 +34,7 @@ router.post('/addSelect',function (req,res) {
 
 // 查看课题
 router.get('/allSelect',function(req,res) {
-    const select = allSelect(req.user.username)
+    const select = allSelect()
     select.then( (allSelect) => {
         if (allSelect) {
             new Result(allSelect,'获取选题成功').success(res)
@@ -60,7 +60,7 @@ router.get('/isStudent',function(req,res) {
     })
 })
 
-// 选题
+// 学生选题
 router.post('/choiceSelect',function(req,res) {
     choiceSelect(req.user.username,req.body.row.title).then( (res) => {
         console.log(res);
@@ -69,7 +69,15 @@ router.post('/choiceSelect',function(req,res) {
     })
 })
 
-
+// 教师查看选题结果
+router.get('/teachersSelect',function(req,res){
+    const allTSelect = teacherSelect(req.user.usename)
+    allTSelect.then( (res) => {
+        console.log(res);
+    }).catch( (err) => {
+        console.log(err);
+    })
+}) 
 
 
 
