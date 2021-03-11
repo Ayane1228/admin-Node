@@ -62,15 +62,17 @@ function choiceSelect(username,title){
 
 // 查看教师的选题结果
 function teacherSelect(teachername) {
-	querySql(`
-			SELECT
-			title,
-			major,
-			choicestudent 
+	return querySql(`
+		SELECT
+			select_table.title,
+			select_table.major,
+			studentaccount.truename 
 		FROM
 			select_table 
+		LEFT OUTER JOIN studentaccount ON select_table.choicestudent = studentaccount.username
 		WHERE
 			teacheraccount = '${teachername}';
+
 	`)
 }
 

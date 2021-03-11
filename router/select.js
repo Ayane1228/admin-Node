@@ -71,9 +71,13 @@ router.post('/choiceSelect',function(req,res) {
 
 // 教师查看选题结果
 router.get('/teachersSelect',function(req,res){
-    const allTSelect = teacherSelect(req.user.usename)
-    allTSelect.then( (res) => {
-        console.log(res);
+    const allTSelect = teacherSelect(req.user.username)
+    allTSelect.then( teacherAllSelect => {
+        if( teacherAllSelect ) {
+            new Result(teacherAllSelect,'教师选题获取成功').success(res)
+        } else {
+            new Result('获取教师选题失败').fail(res)
+        }
     }).catch( (err) => {
         console.log(err);
     })

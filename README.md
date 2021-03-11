@@ -1053,9 +1053,9 @@ router.get('/info', function(req, res) {
 })
 ```
 
-此时在前端重新登录，登录终于成功了！
+此时在前端重新登录，登录成功。
 
-## 修改 Logout 方法
+修改 Logout 方法
 
 修改 `src/store/modules/user.js`：
 
@@ -1067,8 +1067,6 @@ logout({ commit, state, dispatch }) {
         commit('SET_ROLES', [])
         removeToken()
         resetRouter()
-        // reset visited views and cached views
-        // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
         dispatch('tagsView/delAllViews', null, { root: true })
         resolve()
       } catch (e) {
@@ -1086,531 +1084,275 @@ logout({ commit, state, dispatch }) {
 
 # 公告
 
-## 最新通知
+## 最新通知shownotice
 
-点击最新通知之后后端查询数据，并将数据返回给前端渲染到页面上。
+点击最新通知，懒加载页面并在生命周期函数`beforeMount`中请求后端查询数据，并将请求到的数据渲染到页面上。
 
-前端路由为调用后端方法：`http://localhost:18082/#/notice/shownotice`并传递`token`。
+1. 先写前端的页面样式，使用表格并将数据绑定在表格属性中。
 
-后端新建`/router/notice.js`文件用于处理所有通知请求。
+   ```vue
+   <template>
+     <div>
+       <div id="main">
+       <h3>最新通知</h3>
+       <el-table
+       :data="list"
+       stripe
+       fit
+       highlight-current-row
+       style="width: 100%">
+       <el-table-column
+         prop="noticeTime"
+         label="日期"
+         width="180">
+       </el-table-column>
+       <el-table-column
+         prop="noticeTitle"
+         label="题目"
+         width="600">
+       </el-table-column>
+       <el-table-column>
+         <template slot-scope="scope">
+           <el-button 
+             type="primary" 
+             @click="showContent(scope.$index, scope.row)">
+             查看详情
+           </el-button>
+         </template>
+       </el-table-column>
+     </el-table>
+       </div>
+     </div>
+   </template>
+   <style>
+   #main{
+     margin: 30px;
+   }
+   .msgBox{
+     overflow: scroll; 
+     overflow-x:hidden ;
+     width: 60%;
+     height: 80%;
+   }
+   </style>
+   ```
 
-`index.js`中：
+2. 前端使用`axios`的`get`请求数据并将数据遍历保存在`data`中的`list`中。
+
+   ```js
+       beforeMount() {
+         const that = this
+         const token = this.header
+         // 请求后端数据
+         axios.get('http://localhost:18082/notice/shownotice',{
+               // 并保存token到请求头中
+               headers:{
+                 Authorization:token.Authorization
+               }
+           })
+             .then( function (res) {
+               //保存到data中
+               res.data.data.map( (item) => {
+                 //格式化时间
+                 item.noticeTime = utc2beijing(item.noticeTime)
+                 // 显示数据
+                 that.$data.list.push(item)
+               })
+         }).catch( err => { console.log(err); })
+     },
+   ```
+
+   由于获取的时间格式一般为MySql中使用的UTC时间`YYYYMMDD T HHMMSS Z`格式，因此使用了函数`utc2beijing`来将utc时间转为北京时间，将格式也修改为`2009/11/1下午3:58:09`样式。
+
+   > 函数`utc2beijing`，参数为utc时间。
+   >
+   > ```js
+   > export default function utc2beijing(utc_datetime) {
+   >     // 转为正常的时间格式 年-月-日 时:分:秒
+   >     var T_pos = utc_datetime.indexOf('T');
+   >     var Z_pos = utc_datetime.indexOf('Z');
+   >     var year_month_day = utc_datetime.substr(0,T_pos);
+   >     var hour_minute_second = utc_datetime.substr(T_pos+1,Z_pos-T_pos-1);
+   >     var new_datetime = year_month_day+" "+hour_minute_second; // 2017-03-31 08:02:06
+   > 
+   >     // 处理成为时间戳
+   >     timestamp = new Date(Date.parse(new_datetime));
+   >     timestamp = timestamp.getTime();
+   >     timestamp = timestamp/1000;
+   > 
+   >     // 增加8个小时，北京时间比utc时间多八个时区
+   >     var timestamp = timestamp+8*60*60;
+   > 
+   >     // 时间戳转为时间
+   >     var beijing_datetime = new Date(parseInt(timestamp) * 1000).toLocaleString().replace(/年|月/g, "-").replace(/日/g, " ");
+   >     return beijing_datetime; // 2017-03-31 16:02:06
+   > }
+   > ```
+
+3. 后端接受请求。并返回
+
+   `router/index.js`中规定那个模块处理那个请求。
+
+   ```js
+   const noticeRouter = require('./notice')
+   ...
+   // 通过 noticeRouter 来处理 /notice 路由，对路由处理进行解耦
+   router.use('/notice', noticeRouter)
+   ```
+
+4. `notice.js`中处理有关公告的请求
+
+   ```js
+   // 导入express框架
+   const express = require('express')
+   // 导入自定义的结果处理组件
+   const Result = require('../models/Result')
+   
+   // 创建路由
+   const router = express.Router()
+   
+   // 导入sql语句函数
+   const { findNotice,addNotice,deleteNotice } = require('../service/notice')
+   
+   // 当使用get请求`/shownotice`时，就会调用这个函数
+   router.get('/shownotice', function(req, res) {
+      // 调用函数findNotice()执行sql语句
+     const notice = findNotice()
+     // 执行结果notice 是一个Promise对象
+     notice.then( allnotice => {
+       // 调用自定义组件处理结果，获取到则返回给前段
+         if( allnotice ) {
+         new Result(allnotice,'获取最新公告成功').success(res)
+       } else {
+         new Result('获取最新公告失败').fail(res)
+       }
+     })
+   })
+   
+   // 导出路由
+   module.exports = router
+   ```
+
+5. `service/notice`中的`findnotice`函数，用于执行sql语句，查询表中的数据。
+
+   ```json
+   // 导入自定义查询sql语句函数，自动处理数据库账号，密码，查询结束关闭连接
+   const { querySql,queryOne} = require('../db')
+   
+   function findNotice() {
+       return querySql(`SELECT noticeTitle,noticeTime,noticeContent FROM notice`)
+     }
+   
+   // 导出函数
+   module.exports = { findNotice }
+   ```
+
+6. 其他
+
+   1. 查看详情
+
+   > 按钮，点击触发showContetn函数，参数：该行的索引值（scope.$index）和该行上的内容（scope.row）
+   >
+   > ```vue
+   >     <el-table-column>
+   >       <template slot-scope="scope">
+   >         <el-button 
+   >           type="primary" 
+   >           @click="showContent(scope.$index, scope.row)">
+   >           查看详情
+   >         </el-button>
+   >       </template>
+   >     </el-table-column>
+   > ```
+   >
+   > 触发事件，`this.$alert`:elementUI调用弹框组件，参见：https://element.eleme.cn/#/zh-CN/component/message-box
+   >
+   > ```js
+   >     methods:{
+   >       // 获取当前列的index和内容
+   >       showContent(index,row){
+   >         this.$alert(
+   >             // 弹框内容，弹框标题，获取data中的list中的数据，数据是一个数组，索引值由点击时传递
+   >             this.$data.list[index].noticeContent, 				this.$data.list[index].noticeTitle,
+   >         // 弹框相关设置    
+   >         {
+   >             // 自定义类名，便于修改样式
+   >         customClass:"msgBox",
+   >             // 将内容看做HTML代码处理
+   >         dangerouslyUseHTMLString: true,
+   >         	// 不显示确定按钮
+   >         showConfirmButton:false,
+   >         	// 显示取消按钮
+   >         showCancelButton:true,
+   >         	// 取消按钮的文本内容
+   >         cancelButtonText:"关闭"
+   >         })
+   >         // 回调函数    
+   >         .then( () =>{
+   >           console.log('查看详情');
+   >         }).catch( (err) => {
+   >           console.log(err);
+   >         });
+   >       }
+   >     },
+   > ```
+   >
+   > 自定义样式，隐藏x轴滚动条，显示y轴滚动条。
+   >
+   > ```css
+   > .msgBox{
+   >   overflow: scroll; 
+   >   overflow-x:hidden ;
+   >   width: 60%;
+   >   height: 80%;
+   > }
+   > ```
+
+## 修改通知changenotice（admin权限）
+
+在前段中设置各个页面的访问权限。在`router/index.js`文件中定义路由的相关信息，以`http://localhost:9527/#/notice/changenotice`为例。
+
+> 动态路由：数组形式，指需要登陆之后判定权限才能访问
 
 ```js
-// 通过 noticeRouter 来处理 /notice 路由，对路由处理进行解耦
-router.use('/notice', noticeRouter)
-```
-
-获取数据库数据：`service/notice`并导出
-
-```js
-const { querySql,queryOne} = require('../db')
-
-function findNotice() {
-    const sql = `select * from notice`
-    return querySql(sql)
-  }
-
-
-module.exports = {findNotice}
-```
-
-运行sql语句
-
-```sql
-select * from notice
-```
-
-结果：能够查询到数据
-
-`router/notice.js`:
-
-测试能否 在后端查询到数据库数据，执行`findNotice`函数并输出结果。
-
-```js
-const express = require('express')
-const Result = require('../models/Result')
-
-const router = express.Router()
-const { findNotice } = require('../service/notice')
-
-router.get('/shownotice', function(req, res) {
-  console.log('shownotice start');
-  console.log(findNotice())
-})
-
-module.exports = router
-```
-
-执行结果：
-
-```shell
-shownotice start
-SELECT noticeTitle,noticeTime,noticeContent FROM notice
-Promise { <pending> }
-查询成功 [{"noticeTitle":"本科毕业设计（论文）学生题目申报指南 ","noticeTime":"2009-11-01T07:58:09.000Z","noticeContent":"学生可以申报的本科毕业设计（论文）题目分为“ 
-学生自选题目”和“外单位毕设题目”两种类型，“学生自选题目”是指学生自主选择的题目，“外单位毕设题目”是指学生在所在学院以外进行毕业设计的题目。"},{"noticeTitle":"最新公告","noticeTime":"2021-02-20T06:59:51.000Z","noticeContent":"这是一个最新的公告呢日哦那个阿松大啊啊啊"}]
-```
-
-将结果返回到前端
-
-```js
-const express = require('express')
-const Result = require('../models/Result')
-
-const router = express.Router()
-const { findNotice } = require('../service/notice')
-const { all } = require('./user')
-
-// 最新公告
-router.get('/shownotice', function(req, res) {
-  console.log('shownotice start');
-  const notice = findNotice()
-  // notice 是一个Promise对象
-  notice.then( allnotice => {
-    if( allnotice ) {
-      new Result(allnotice,'获取最新公告成功').success(res)
-    } else {
-      new Result('获取最新公告失败').fail(res)
-    }
-  })
-})
-
-module.exports = router
-```
-
-前端取得数据处理数据并展示：
-
-```vue
-<template>
-  <div>
-    <div id="main">
-    <h3>最新通知</h3>
-    <el-table
-    :data="list"
-    stripe
-    fit
-    highlight-current-row
-    @sort-change="sortChange"
-    style="width: 100%">
-    <el-table-column
-      prop="noticeTime"
-      label="日期"
-      width="180">
-    </el-table-column>
-    <el-table-column
-      prop="noticeTitle"
-      label="题目"
-      width="600">
-    </el-table-column>
-    <el-table-column>
-      <template slot-scope="scope">
-        <el-button 
-          type="primary" 
-          @click="showContent(scope.$index, scope.row)">
-          查看详情
-        </el-button>
-      </template>
-    </el-table-column>
-  </el-table>
-    </div>
-  </div>
-</template>
-
-
-<script>
-import axios from 'axios'
-import { getToken } from '@/utils/auth'
-// 导入时间戳转换函数
-import utc2beijing from '../../utils/get-noticeTime'
-export default {
-    data() {
-      return {
-        //数据列表
-        list: []
-      }
-    },
-    methods:{
-      // 展示详情按钮：
-        //点击获取当前列的index和内容
-      showContent(index,row){
-          //设置内容为当前列的内容和标题
-        this.$alert(this.$data.list[index].noticeContent, this.$data.list[index].noticeTitle, {
-            //重新设置类名
-        customClass:"msgBox",
-            //数据为html格式
-        dangerouslyUseHTMLString: true,
-            //不显示确定按钮
-        showConfirmButton:false,
-            //显示取消按钮
-        showCancelButton:true,
-            //取消按钮内容为关闭
-        cancelButtonText:"关闭"
-        })
-         //点击之后的回调函数
-            .then( () =>{
-          console.log('查看详情');
-        }).catch( (err) => {
-          console.log(err);
-        });
-      }
-    },
-    //计算属性：获取token
-    computed:{
-      header(){
-        return {
-          Authorization:`Bearer ${getToken()}`
+/* 动态路由 */
+export const asyncRoutes = [  
+  // 公告路由部分
+  {
+      // 处理访问路径为‘/notice/’时的情况
+      path: notice',
+      // 引入懒加载
+      component: Layout,
+      // 访问会重定向至其他路由，这里是指访问地址为 /notice/ 会自动跳转/notice/shownotice地址
+      redirect: '/notice/shownotice',
+      //左边的一级标题的文字和图标
+      meta: { title: '通知', icon: 'el-icon-position' },
+      //子路由
+      children: [
+        {
+          // 路由路径
+          path: '/notice/shownotice',
+          // 使用懒加载，加载模块
+          component: () => import('@/views//notice/shownotice'),
+          // 模块名
+          name: 'shownotice',
+          // 二级菜单的文字和图标
+          meta: { title: '最新通知', icon: 'el-icon-position' }
+        },
+        {
+          path: '/notice/changenotice',
+          // 懒加载
+          component: () => import('@/views//notice/changenotice'),
+          name: 'changenotice',
+          // 设置左侧栏的title,icon和所需要的权限，这里指必须是登录时获取到的数据库中的role属性为admin时才能访问
+          meta: { title: '修改通知', icon: 'el-icon-position', roles: ['admin'] }
         }
-      }
-    },
-    //生命周期函数
-    beforeMount() {
-        //保存token
-      const that = this
-      const token = this.header
-      // 请求后端数据
-      axios.get('http://localhost:18082/notice/shownotice',{
-            // token加到请求头中
-            headers:{
-              Authorization:token.Authorization
-            }
-        })
-          .then( function (res) {
-            //响应结果遍历之后保存到$data.list数组中
-            res.data.data.map( (item) => {
-              //格式化时间
-              item.noticeTime = utc2beijing(item.noticeTime)
-              // 保存
-              that.$data.list.push(item)
-            })
-      }).catch( err => { console.log(err); })
-  },
-}
-</script>
-
-<style>
-#main{
-  margin: 30px;
-}
-.msgBox{
-    //过长显示滚动条
-  overflow: scroll;
-    //关闭底部滚动条
-  overflow-x:hidden ;
-  width: 60%;
-  height: 100%;
-}
-</style>
-
-```
-
-## admin-修改通知
-
-前端采用post请求,
-
-```vue
-<template>
-  <div>
-    <div class="newNotice">
-    <div style="margin: 20px 0;"></div>
-    <h3>发布公告</h3>
-    <el-input
-      type="textarea"
-      :autosize="{ minRows: 10, maxRows: 50}"
-      placeholder="请输入内容"
-      v-model="textareaContent">
-    </el-input>
-      <el-button 
-        type="success"
-        @click="submitNotice"
-        >
-        发布新通知
-      </el-button>
-    </div>
-    <hr>
-    <div id="main">
-    <h3>最新通知</h3>
-    <el-table
-    :data="list"
-    stripe
-    fit
-    highlight-current-row
-    style="width: 100%">
-        <el-table-column
-          prop="noticeTime"
-          label="日期"
-          width="180">
-        </el-table-column>
-        <el-table-column
-          prop="noticeTitle"
-          label="题目"
-          width="600">
-        </el-table-column>
-        <el-table-column>
-          <template slot-scope="scope">
-            <el-button 
-              type="primary" 
-              @click="showContent(scope.$index, scope.row)">
-              查看详情
-            </el-button>
-            <el-button type="danger">删除该通知</el-button>
-          </template>
-        </el-table-column>
-    </el-table>
-    </div>
-  </div>
-</template>
-
-
-<script>
-import axios from 'axios'
-import { getToken } from '@/utils/auth'
-// 导入时间戳转换为标准时间函数
-import utc2beijing from '../../utils/get-noticeTime'
-
-export default {
-    data() {
-      return {
-        list: [],
-        textareaContent:null
-      }
-    },
-    //计算属性获取token
-    computed:{
-      header(){
-        return {
-          Authorization:`Bearer ${getToken()}`
-        }
-      }
-    },
-    methods:{
-      //刷新页面
-      reload(){
-        window.location.reload();
-      },
-      // 获取当前列详情的index和内容
-      showContent(index,row){
-        this.$alert(this.$data.list[index].noticeContent, this.$data.list[index].noticeTitle, {
-        customClass:"msgBox",
-        dangerouslyUseHTMLString: true,
-        showConfirmButton:false,
-        showCancelButton:true,
-        cancelButtonText:"关闭"
-        }).then( () =>{
-          console.log('查看详情');
-        }).catch( (err) => {
-          console.log(err);
-        });
-      },
-      // 提交新公告
-      submitNotice(){
-        //判断内容是否为空
-        if (this.$data.textareaContent === null ) {
-            this.$message({
-            type: 'warning',
-            message: '内容不能为空 ' 
-          })
-        } else {
-          this.$prompt('请输入标题', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消'
-        }).then(({ value }) => {
-          // 请求发布通知接口
-          // 获取当前的token
-          const token = this.header
-          axios({
-            url:'http://localhost:18082/notice/changenotice',
-            method:'post',
-            // 添加token
-            headers:{
-              Authorization:token.Authorization
-            },
-            data:{
-                noticeTitle:value,
-                noticeContent:this.$data.textareaContent
-                }
-          }).then( (res) =>{
-            // axios响应成功,刷新页面
-            console.log(res);
-          }).catch( (err) => {
-              console.log('请求发布接口失败' + err);
-            })
-        // 发布结束之后的回调    
-        this.$message({
-            type: 'success',
-            message: '发布成功,标题为: ' + value
-          }).then(
-            // 刷新页面
-            setTimeout(this.reload(),30000)
-          ).catch((err) => {
-          this.$message({
-            type: 'error',
-            message: '发布失败'
-          })       
-        });
-      })
-    }
+      ]
   }
-},
-    beforeMount() {
-      const that = this
-      const token = this.header
-      // 请求后端数据
-      axios.get('http://localhost:18082/notice/shownotice',{
-            // 并保存token到请求头中
-            headers:{
-              Authorization:token.Authorization
-            }
-        }).then( function (res) {
-            //保存到data中
-            res.data.data.map( (item) => {
-              //格式化时间
-              item.noticeTime = utc2beijing(item.noticeTime)
-              // 显示数据
-              that.$data.list.push(item)
-            })
-      }).catch( err => { console.log(err); })
-  },
-}
-</script>
-
-<style>
-#main{
-  margin:30px;
-}
-.msgBox{
-  overflow: scroll; 
-  overflow-x:hidden ;
-  width: 60%;
-  height: 80%;
-}
-.newNotice{
-  margin: 30px;
-}
-.newNotice button{
-  margin-top: 10px;
-}
-
-</style>
-
+]
 ```
 
-后端
-
-```js
-//修改公告
-router.post('/changenotice', function(req,res) {
-  // 获取请求数据
-  const newTitle = req.body.noticeTitle;
-  const newContent = req.body.noticeContent;
-  addNotice(newTitle,newContent).then( (res) => {
-    console.log('添加成功');
-  }).catch( (err) =>{
-    console.log('添加公告失败' + err);
-  })
-})
-```
-
-```js
-function addNotice(newTitle,newContent) {
-  // 插入语句
-  return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
-}
-```
-
-## admin-修改通知
-
-删除通知
-
-前端：
-
-```vue
-<el-button 
-    @click="deleteNotice(scope.$index, scope.row)"
-    type="danger">
-    删除该通知
-</el-button>	
-```
-
-```js
-      // 删除公告
-      deleteNotice(index,row){
-        const deleteNotice = row.noticeTitle;
-        this.$alert(`是否要删除公告:${row.noticeTitle}`, '删除公告', {
-          confirmButtonText: '确定删除'
-        }).then ( () =>{
-            // 获取当前的token
-            const token = this.header
-            axios({
-              url:'http://localhost:18082/notice/deleteNotice',
-              method:"post",
-              headers:{
-                Authorization:token.Authorization
-              },
-              data:{deleteNotice}
-            }).then ( (res) => {
-              console.log(res);
-            }).catch( (err) => {
-              console.log(err);
-            })
-        }).catch( (err) => {
-          console.log(err);
-        });
-      },
-```
-
-​	sql语句
-
-```js
-function deletNotice(deleteNotice) {
-  return queryOne(`DELETE FROM notice WHERE noticeTitle = ${deleteNotice}`)
-}
-```
-
-
-
-## 学生点击选择课题
-
-请求数据 ： `req.user.username`,`row`登陆账号账号的用户名和当前点击的行的信息。
-
-接受到请求，
-
-先去判断`row.istrue`的值，
-
-再将`select`表添加请求学生信息，将学生的`username`添加到`select`表中给老师查看相关课题当前提交请求的学生信息，当选择的学生数量超过3个时或是老师确定最终人选时，将`select`的istrue修改为不可选择。
-
-当选定时将最终学生添加到`select`表中。
-
-> 前端部分修改：将按钮的disable属性和istrue绑定，如果istrue为可选，则disable为false。
->
-> ```js
->               <el-button 
->                   type="primary" 
->                   @click="submit(scope.row)" 
->                   :disabled="scope.row.istrue== '不可选' "
->                 >确认选择
->               </el-button>
-> ```
-
-后端sql语句
-
-> 学生选择选题
->
-> 1.判断当前选题的 istrue是否为可选且personnumber的值大于0
->
-> 2.将可选人数personnumber减一，当personnumber为0时，设置istrue为不可选
->
-> 3.select表中新增一列存放选题人名字 
->
-> 4.studentaccount表中存放当前选择的选题信息
-
-sql中判断`istrue`和`personnumber`的值,
-
-​	查询测试
-
-```
-
-```
+与最新通知页面不同，这个页面多了2个功能：发布新公告，删除公共
 
 
 
@@ -1620,7 +1362,15 @@ sql中判断`istrue`和`personnumber`的值,
 
 
 
-# 问题
+
+
+
+
+
+
+
+
+# 遇到的问题
 
 错误：只能访问`http://127.0.0.1:18082/`请求其他都没有响应。
 
