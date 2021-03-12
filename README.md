@@ -1084,7 +1084,7 @@ logout({ commit, state, dispatch }) {
 
 # 公告
 
-## 最新通知shownotice
+## 最新通知shownotice（admin，teacher，student）
 
 点击最新通知，懒加载页面并在生命周期函数`beforeMount`中请求后端查询数据，并将请求到的数据渲染到页面上。
 
@@ -1220,7 +1220,7 @@ logout({ commit, state, dispatch }) {
      const notice = findNotice()
      // 执行结果notice 是一个Promise对象
      notice.then( allnotice => {
-       // 调用自定义组件处理结果，获取到则返回给前段
+       // 调用自定义组件处理结果，获取到则返回给前端
          if( allnotice ) {
          new Result(allnotice,'获取最新公告成功').success(res)
        } else {
@@ -1308,7 +1308,7 @@ logout({ commit, state, dispatch }) {
    > }
    > ```
 
-## 修改通知changenotice（admin权限）
+## 修改通知changenotice（admin）
 
 在前段中设置各个页面的访问权限。在`router/index.js`文件中定义路由的相关信息，以`http://localhost:9527/#/notice/changenotice`为例。
 
@@ -1352,21 +1352,682 @@ export const asyncRoutes = [
 ]
 ```
 
-与最新通知页面不同，这个页面多了2个功能：发布新公告，删除公共
+与最新通知页面不同，这个页面多了2个功能：发布新公告，删除公告
+
+#### 发布新公告：内容为`textarea`,点击发布新通知之后进行前端验证。
+
+```vue
+    <div class="newNotice">
+    <div style="margin: 20px 0;"></div>
+    <h3>发布公告</h3>
+    <el-input
+      type="textarea"
+      :autosize="{ minRows: 10, maxRows: 50}"
+      placeholder="请输入内容"
+      v-model="textareaContent">
+    </el-input>
+      <el-button 
+        type="success"
+        @click="submitNotice"
+        >
+        发布新通知
+      </el-button>
+    </div>
+```
+
+> 前端验证，先判断内容（textareaContent）是否为空，并给出提示。不为空则调用`$prompt`（提交内容的对话框）要求输入标题。再使用`post`方法将token，内容（`noticeContent:this.$data.textareaContent`和标题`noticeTitle:value`）通过header和data传递并调用后端接口`http://localhost:18082/notice/changenotice`。
+
+```js
+      // 提交公告
+      submitNotice(){
+        //判断内容是否为空
+        if (this.$data.textareaContent === null ) {
+            this.$message({
+            type: 'warning',
+            message: '内容不能为空 ' 
+          })
+        } else {
+            // 可以传递值的对话框
+          this.$prompt('请输入标题', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        }).then(({ value }) => {
+          // 请求发布通知接口
+          // 获取当前的token
+          const token = this.header
+          axios({
+            url:'http://localhost:18082/notice/changenotice',
+            method:'post',
+            // 添加token
+            headers:{
+              Authorization:token.Authorization
+            },
+            data:{
+                noticeTitle:value,
+                noticeContent:this.$data.textareaContent
+                }
+          }).then( (res) =>{
+            console.log(res);
+          }).catch( (err) => {
+              console.log('请求发布接口失败' + err);
+            })
+            // 发布结束之后的回调    
+            this.$message({
+                type: 'success',
+                message: '发布成功,标题为: ' + value
+              }).then( 
+				console.log('发布成功')
+              ).catch((err) => {
+              this.$message({
+                type: 'error',
+                message: '发布失败'
+              })       
+            });
+        })
+      }
+      }
+  }
+```
+
+后端接口，从req.body中接受参数，调用`addNotice()`函数使用`MySql`语句 
+
+```js
+//修改公告
+router.post('/changenotice', function(req,res) {
+  // 获取请求数据
+  const newTitle = req.body.noticeTitle;
+  const newContent = req.body.noticeContent;
+  addNotice(newTitle,newContent).then( () => {
+    console.log('添加成功');
+  }).catch( (err) =>{
+    console.log('添加公告失败' + err);
+  })
+})
+```
+
+> 插入到表notice中，并自动设置`ID`，自动设置当前时间（MySql中`Now()`函数：返回当前的日期和时间）。
+
+```js
+function addNotice(newTitle,newContent) {
+  // 插入语句
+  return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
+}
+```
+
+##### 删除公告：点击获取当前列标题，调用后端接口，删除数据库中的记录。
+
+# 账号管理（admin）
 
 
 
+账号管理权限为admin，分为学生账号管理和教师账号管理。两者相似，都能查看学生/教师账号信息，添加学生/教师账号，删除学生/教师账号，修改学生/教师账号密码。
 
+### 添加账号
 
+前段页面部分使用表单`el-form`，`el-input`,`el-cascader`完成。点击确认添加调用函数`addNewStudent('newStudentForm')`将表单数据传递给后端。
 
+```vue
+    <!-- 添加新学生 -->
+    <div class="top">
+      <h3>添加新学生账号</h3>
+      <div class="topMain">
+        <el-form label-width="80px" :model="newStudentForm" :rules="rules" ref="newStudentForm" class="demo-form-inline">
+        <el-col :span="5">
+          <el-form-item label="账号" prop="newAccount" >
+            <el-input v-model="newStudentForm.newAccount" placeholder="账号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="密码" prop="newPassword" >
+            <el-input v-model="newStudentForm.newPassword" placeholder="密码" show-password></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="姓名"  prop="newName">
+            <el-input v-model="newStudentForm.newName" placeholder="姓名"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="学号"  prop="newStudentID">
+            <el-input v-model="newStudentForm.newStudentID" placeholder="学号"></el-input>
+          </el-form-item>        
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="班号"  prop="newStudentClassID">
+            <el-input v-model="newStudentForm.newStudentClassID" placeholder="班号"></el-input>
+          </el-form-item>          
+        </el-col>
+        <el-col :span="5" class="major">
+          <el-form-item label="专业" >
+            <el-cascader
+            ref="zhuangye"
+            placeholder="专业"
+            :options="newStudentForm.options"
+            filterable></el-cascader>
+          </el-form-item>
+        </el-col>
+        <el-col :span="11">
+          <el-form-item>
+            <el-button type="primary" @click="addNewStudent('newStudentForm')">确认添加</el-button>
+          </el-form-item>
+        </el-col>
+      </el-form>
+      </div>    
+    </div>
+```
 
+其中使用`el-form`的一些功能：验证功能`:rules="rules" `绑定了验证规则（写在`data`中）。
 
+> required：是否必须，message：提示信息，trigger：何时验证。
 
+```js
+        // 验证规则，
+        rules:{
+          newAccount:[{ required: true, message: '请输入账号名', trigger: 'blur' }],
+          newPassword:[
+            {required: true, message: '请输入密码', trigger: 'blur'},
+            { min: 4, message: '密码长度最小为4个字符', trigger: 'blur' }
+          ],
+          newName:[{required: true, message: '请输入学生姓名', trigger: 'blur'}],
+          newStudentID:[{required: true, message: '请输入学生学号', trigger: 'blur'}],
+          newStudentClassID:[{required: true, message: '请输入学生班号', trigger: 'blur'}]
+        },
+```
 
+##### el-cascader:下拉菜单无法获取一级表单的数据	
 
+el-cascader显示的数据是定死的，其他一开始均默认为空，而下拉菜单是可选的，所以要先定义好选项内容（options），label是显示在网页上的值，而value是每个选项真实绑定的值。由于只能获取到二级菜单（children）选中的value，所以将子菜单的value将学院名和专业都写上了，交给后端处理。
 
+> 最后提交给的值其实是：'信息工程学院/软件工程'。
 
+```js
+        newStudentForm: {
+          newAccount: null,
+          newPassword: null,
+          newName:null,
+          newStudentID:null,
+          newStudentClassID:null,  
+          //选择专业       
+          options: [{
+          value: '信息工程学院',
+          label: '信息工程学院',
+          children: [{
+            value: '信息工程学院/软件工程',
+            label: '软件工程'
+          }, {
+            value: '信息工程学院/软件工程(嵌入式)',
+            label: '软件工程(嵌入式)',
+          }]
+          }, 
+          {
+          value: '机电工程与自动化学院',
+          label: '机电工程与自动化学院',
+          children: [{
+            value: '机电工程与自动化学院/车辆工程',
+            label: '车辆工程',
+          }, {
+            value: '机电工程学院/自动化',
+            label: '自动化',
+          }]
+          }, 
+          {
+          value: '国际商学院',
+          label: '国际商学院',
+          children: [{
+            value: '国际商学院/国际经济与贸易',
+            label: '国际经济与贸易'
+          }, {
+            value: '国际商学院/会计学CIMA',
+            label: '会计学CIMA'
+          }]
+        }]
+        },
+```
 
+前段按钮触发函数`addNewStudent(newStudentForm)`
+
+```js
+      // 添加账号
+      addNewStudent(newStudentForm) {
+        this.$refs[newStudentForm].validate((valid) => {
+        // 再次进行前端验证
+        if (valid) {
+          this.$message({
+          message: '提交成功',
+          type: 'success'
+        })
+        // 获取数据
+        const token = this.header
+        const newSAccount = this.$data.newStudentForm.newAccount
+        const newSPassword = this.$data.newStudentForm.newPassword
+        const newSName = this.$data.newStudentForm.newName
+        const newStudentID = this.$data.newStudentForm.newStudentID
+        const newStudentClassID = this.$data.newStudentForm.newStudentClassID 
+        const newStudentMajor = this.$refs['zhuangye'].getCheckedNodes()[0].data.value
+        // 请求接口
+        axios({
+            url:'http://localhost:18082/studentAccount/addStudentAccount',
+            method:'post',
+            headers:{ Authorization:token.Authorization },
+            data:{newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentMajor}
+        }).then ( (res) => {
+          console.log(res);
+        }).catch( (err) => {
+          console.log(err);
+        })
+        } 
+    // 未通过验证，不符合rules
+    else {
+          this.$message({
+          message: '提交失败',
+          type: 'error'
+        })
+            return false;
+          }
+        });
+      },
+```
+
+后端接口同样的也是获取数据，调用函数，查询数据库。而传递过来的学院/专业值则通过字符串方法：`split()`进行分割。
+
+```js
+    const newStudentCollage = req.body.newStudentMajor.split('/')[0]
+    const newStudentMajor  = req.body.newStudentMajor.split('/')[1]
+```
+
+最后保存到两个表（`user`，`studentaccount`）中。
+
+```js
+// 添加新学生
+function newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor){
+  console.log(newStudentCollage,newStudentMajor);
+  return queryOne(`
+  INSERT INTO studentaccount (id,username,password,truename,studentID,classID,college,major) 
+  VALUES (id,'${newSAccount}', '${newSPassword}','${newSName}','${newStudentID}','${newStudentClassID}','${newStudentCollage}','${newStudentMajor}');
+  INSERT INTO user (id,username,password,role) VALUES (id,'${newSAccount}', '${newSPassword}','student')
+  `)
+}
+```
+
+## 账号信息展示
+
+与公告页类似，在生命周期函数`beoforeMount()`中获取数据并渲染到页面上。
+
+点击展示隐藏的部分数据使用了`el-table`的一个属性：`el-table-column type="expand"`，参见：https://element.eleme.cn/#/zh-CN/component/table#table-column-attributes。
+
+## 修改密码和删除账号
+
+两者类似，都是点击获取当前列的数据，并在前端验证完成后，调用后端接口，将新数据和当前列的用户名传递过去，修改数据库中的值。
+
+# 个人信息
+
+分为学生个人信息和教师个人信息。管理员账号admin分在了教师个人信息中。当前登录的账号可以查看，修改自己的个人信息。
+
+## 学生个人信息（admin，teacher）
+
+由于这个框架中默认管理员有访问所有的动态路由的权限，但管理员不是学生账号，因此需要我们自己加上一层判断。
+
+同样是在获取数据的声明周期函数进行判断，我们直接请求接口`information/studentInformation`，通过后端判断后的返回值（`if (res.data == '管理员无权访问学生个人信息') `）来判断是否是学生账号,如果是则手动重定向到隐藏路由页面`information/errorinformation`,不是则获取数据并渲染页面。
+
+```js
+    beforeMount() {
+      const that = this
+      const dataForm = that.$data.form
+      const token = this.header
+      // 请求后端数据
+      axios.get('http://localhost:18082/information/studentInformation',{
+            // 并保存token到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }
+        }).then( (res) =>{
+          if (res.data == '管理员无权访问学生个人信息') {
+            // 重定向
+            window.location.href = 'http://localhost:9527/index.html#/information/errorinformation'
+          } else {
+              const result = res.data.data[0]
+              dataForm.truename = result.truename
+              dataForm.studentID = result.studentID
+              dataForm.phone = result.phone
+              dataForm.email = result.email
+              dataForm.major = result.major              
+              dataForm.introduction = result.introduction
+          }
+        }).catch( (err) => {
+          console.log(err);
+        })
+  }
+}
+```
+
+隐藏路由：`router/index.js`中设置：`hidden: true`,设置后改路由信息不在左侧侧边栏中显示。
+
+```js
+      {
+        path:'/information/errorinformation',
+        component:() => import('@/views//information/adminStudent'),
+        name:'errorinformation',
+        meta:{ title:'管理员无法访问学生个人信息',roles:['admin']},
+        hidden: true
+      }
+```
+
+后端请求验证过程，每次请求接口都会传递此次请求的用户名，因此只需判断用户是否是‘admin’即可。
+
+```js
+// 获得学生个人信息
+router.get('/studentInformation',function(req,res){
+    if (req.user.username == 'admin' ) {
+        res.send('管理员无权访问学生个人信息')
+    } else {
+        const studentInf = findStudnetInformation(req.user.username)
+        studentInf.then( studentInf =>{
+            if (studentInf) {
+                new Result(studentInf,'获取学生个人信息成功').success(res)
+            } else {
+                new Result('获取学生个人信息失败').fail(res)
+            }
+        })
+    }
+})
+```
+
+当用户名不为`admin`且`role`是`student`时则可获取到当前登录学生的信息，并传递给前端。
+
+当渲染页面时，为了防止学生修改一些重要信息（姓名，学号，专业等），需要将一些输入框禁用：`:disabled="true"`。
+
+```vue
+      <el-form-item label="姓名">
+        <el-col :span="10">
+        <el-input 
+          v-model="form.truename"  
+          :disabled="true" ></el-input>
+          </el-col>
+      </el-form-item>
+```
+
+## 教师/管理员个人信息（admin，teacher）
+
+教师和管理员共用一套页面，因此判断之后不是进行重定向，而是定义一个标志值（flag），在生命周期函数请求完之后定义这个值，用于判断提交修改时应该调用哪个接口。
+
+```js
+      data() {
+      return {
+        // flag 0为管理员,1为教师
+        flag:null,
+        form: {
+          truename:null,
+          teacherID:null,
+          phone:null,
+          email:null,
+          office:null,
+          teacherrank:null
+        }
+      }
+  },  
+```
+
+前端接受到响应后，修改flag的值(`that.$data.flag = 0`)，当是管理员时还须调用提示（`this.adminAccount()`）并获取渲染数据。
+
+```js
+    beforeMount() {
+      const that = this
+      const dataForm = that.$data.form
+      const token = this.header
+      // 请求后端数据
+      axios.get('http://localhost:18082/information/teacherInformation',{
+            // 并保存token到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }
+        }).then( (res) =>{
+          if (res.data.msg == '获取admin信息成功') {
+            that.$data.flag = 0
+            this.adminAccount()
+            const result = res.data.data[0]
+            dataForm.truename = result.truename
+            dataForm.teacherID = result.teacherID
+            dataForm.phone = result.phone
+            dataForm.email = result.email
+            dataForm.office = result.office
+            dataForm.teacherrank = result.teacherrank   
+          } else {
+              that.$data.flag = 1
+              const result = res.data.data[0]
+              dataForm.truename = result.truename
+              dataForm.teacherID = result.teacherID
+              dataForm.phone = result.phone
+              dataForm.email = result.email
+              dataForm.office = result.office
+              dataForm.teacherrank = result.teacherrank              
+          }
+        }).catch( (err) => {
+          console.log(err);
+        })
+  }
+```
+
+主要判断逻辑则在后端完成，判断请求的用户用户名`username`,在使用不同的函数查询不同的数据库并放回数据。
+
+```js
+// 获得管理员/教师信息
+router.get('/teacherInformation', function (req,res) {
+    if (req.user.username == 'admin') {
+        const findAdminInf = findAdminInformation()
+        findAdminInf.then(
+            adminInformationization => {
+                if (adminInformationization) {
+                    new Result(adminInformationization,'获取admin信息成功').success(res)
+                } else {
+                    new Result('获取admin信息失败').fail(res)
+                }
+            }
+        )
+    } else {
+        const findTeacherInf = findTeacherInformation(req.user.username)
+        findTeacherInf.then(
+            teacherInf => {
+                if (teacherInf) {
+                    new Result(teacherInf,'获取教师信息成功').success(res)
+                } else {
+                    new Result('获取教师信息失败').fail(res)
+                }
+            }
+        )
+    }
+})
+```
+
+其他和学生信息一致，只有在提交信息修改内容时还需要判断一次flag的值并调用不同的接口:
+
+```js
+    onSubmit(){
+      // 提示修改信息
+      this.change()
+      const token = this.header
+      // 管理员账号
+      if (this.$data.flag === 0)  {
+        const trueName = this.$data.form.truename
+        const newPhone = this.$data.form.phone
+        const newEmail = this.$data.form.email
+        const newOffice = this.$data.form.office
+        axios({
+          url:'http://localhost:18082/information/adminChangeInf',
+          method:"post",
+          headers:{ Authorization:token.Authorization },
+          data:{ trueName,newPhone,newEmail,newOffice }
+        }).then( (res) => {
+          console.log(res);
+        }).catch( (err) => {
+          console.log(err);
+        })
+      } else {
+      // 教师
+        const trueName = this.$data.form.truename
+        const newPhone = this.$data.form.phone
+        const newEmail = this.$data.form.email
+        const newOffice = this.$data.form.office
+        const newTeacherrank = this.$data.form.teacherrank
+        axios({
+          url:'http://localhost:18082/information/teacherChangeInf',
+          method:"post",
+          headers:{ Authorization:token.Authorization },
+          data:{ trueName,newPhone,newEmail,newOffice,newTeacherrank }
+        }).then( (res) => {
+          console.log(res);
+        }).catch( (err) => {
+          console.log(err);
+        })
+      }
+    }
+  },
+```
+
+# 论文选题
+
+## 选题信息（admin，teacher，student）
+
+无权限限制，但只有学生能点击选题按钮。
+
+管理员/教师判断：通过将按钮的`disabled`属性和`el-tag`中的都绑定该行(数组)中的`istrue`值进行控制:
+
+> ```vue
+> <el-tag :type="scope.row.istrue=='可选' ? 'success' : 'danger'" >
+>     {{scope.row.istrue}}
+> </el-tag>
+> ```
+>
+> `el-tag`绑定`data`中的数据`istrue`，这个三元运算符指：当刚行的`istrue==‘可选’`为真时，该`tag`的`type`就为`sucess`,不为真时则为`danger`。
+>
+> `el-button`的`disabled`属性则在`istrue`为`不可选`时为真即禁用该按钮。
+
+```vue
+          <el-table-column
+            prop="isTrue"
+            width="180"
+            label="当前是否可选">
+            <template slot-scope="scope">
+            <!-- 三元运算符定义tag的内容 -->
+            <el-tag :type="scope.row.istrue=='可选' ? 'success' : 'danger'" >{{scope.row.istrue}}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="submit"
+            label="确认选择"
+            width="180">
+            <template slot-scope="scope">
+              <el-button 
+                  type="primary" 
+                  @click="submit(scope.row)" 
+                  :disabled="scope.row.istrue== '不可选'"
+                >确认选择
+              </el-button>
+            </template>
+          </el-table-column>
+```
+
+`istrue`的值有两次改变，默认为空。
+
+第一次是在生命周期函数`beforeMount()`中获取的，与在后端获取到的其他选题信息一样先渲染到页面上。这里的`istrue`是数据库中的值。
+
+```js
+  beforeMount(){
+      const that = this
+      const token = this.header
+      axios.get('http://localhost:18082/select/allSelect',{
+            // 并保存token到请求头中
+            headers:{
+              Authorization:token.Authorization
+            }
+        })
+          .then( function (res) {
+            //保存到data中
+            res.data.data.map( (item) => {
+              // 显示数据
+              that.$data.allSelect.push(item)
+            })
+      }).catch( err => { console.log(err); })
+  },
+```
+
+第二次是在生命周期函数`created()`进行判断，请求后端接口`isStudent`获取当前用户的`role`值。
+
+当`role != 'student'`时遍历`data`中的数组的`istrue`修改为‘不可选’。
+
+> 注意：待解决
+>
+> 这里并没有修改数据库中的值，而是修改前段页面中渲染的值，因此学生登录时还是能看到可选和非可选的各个选题。
+>
+> 这里使用了延时函数`setTimeout(function(){},time)`防止在页面数据还未渲染时就执行完这个函数，
+>
+> 按理说：`mounted（）`生命周期函数只会在`beforeMount()`后执行，但实际上如果不延时，这个操作经常会执行失败,推测与生命周期函数与异步操作之间的先后有关。
+
+```js
+  // 判断是否为学生账号,验证修改前端 istrue的值
+  mounted(){
+      const that = this
+      const token = this.header
+      axios({
+        url:'http://localhost:18082/select/isStudent',
+        headers:{ Authorization:token.Authorization }
+      }).then( (res) => {
+        const role = res.data.data[0].role
+        if( role != 'student') {
+          setTimeout(function(){
+            that.$data.allSelect.forEach((item,index,arr) => {
+            item.istrue = '不可选'
+          })
+          },250)
+        } else{
+          console.log('可以选择');
+        }
+      }).catch( (err) => {
+        console.log(err);
+      })
+  }
+```
+
+后端验证：将请求时登陆者的账号名做参数，并通过调用函数`ifstudent()`在数据库中获取它的`role`值。
+
+```js
+// 判断是否为学生账号
+router.get('/isStudent',function(req,res) {
+    const ifstudent = ifStudent(req.user.username)
+    ifstudent.then( (ifstudent) => {
+        if (ifstudent) {
+            new Result(ifstudent,'判断学生成功').success(res)
+        } else {
+            new Result('判断学生失败').fail(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+```
+
+数据库判断：获取`user`表中该用户的`role`值。
+
+```js
+// 判断是否是学生账号
+function ifStudent(username) {
+	return querySql(`
+	SELECT
+		role 
+	FROM
+		user 
+	WHERE
+		username = '${ username }'
+	`)
+}
+```
+
+## 提交选题（admin，teacher）
+
+同样因为管理员账号能够访问所有的动态路由，这里也采用了学生个人信息页面的方式，当管理员点击时提交选题时，就会判断请求者的账号名，若为`user`则将自动重定向到页面`selcet/errorselect`。若不是则能请求到数据并渲染页面。
+
+提交选题也与修改个人信息类似。
+
+## 我的选题（教师）（admin，teacher）
 
 
 
