@@ -83,6 +83,8 @@ router.get('/teachersSelect',function(req,res){
     })
 }) 
 
+// 教师拒绝学生
+
 
 
 module.exports = router

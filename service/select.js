@@ -12,8 +12,10 @@ function showAddSelect(teacherName){
 // 创建新选题
 function addSelect(newTitle,teacherName,newMajor,newContent,teacheraccount){
     return querySql(
-        `   INSERT INTO select_table (id,title,teachername,major,content,istrue,teacheraccount)
-            VALUES (id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选','${teacheraccount}') 
+        `
+		INSERT INTO select_table ( id, title, teachername, needmajor, content, istrue, teacheraccount )
+		VALUES
+			( id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选', '${teacheraccount}' ) 
         `)
 }
 
@@ -46,7 +48,7 @@ function ifStudent(username) {
 	`)
 }
 
-// 添加学生到选择名单中
+// 学生选题
 function choiceSelect(username,title){
 	return querySql(`
 	UPDATE select_table 
@@ -65,8 +67,14 @@ function teacherSelect(teachername) {
 	return querySql(`
 		SELECT
 			select_table.title,
-			select_table.major,
-			studentaccount.truename 
+			select_table.needmajor,
+			studentaccount.truename,
+			studentaccount.studentID, 
+			studentaccount.classID,
+			studentaccount.major, 
+			studentaccount.phone,
+			studentaccount.email,
+			studentaccount.introduction  
 		FROM
 			select_table 
 		LEFT OUTER JOIN studentaccount ON select_table.choicestudent = studentaccount.username
@@ -76,6 +84,8 @@ function teacherSelect(teachername) {
 	`)
 }
 
+
+// 教师拒绝学生
 
 
 module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect }

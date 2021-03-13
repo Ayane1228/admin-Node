@@ -1,70 +1,17 @@
-# 前端框架搭建
-
-#### 使用vue-element-admin 源码搭建前端框架：
-
-```javascript
-git clone https://github.com/PanJiaChen/vue-element-admin
-cd vue-element-admin
-npm i
-npm run dev
-```
-
-### 精简项目
-
-- 删除 src/views 下的源码，保留：
-
-  - dashboard：首页
-  - error-page：异常页面
-  - login：登录
-  - redirect：重定向
-
-- 对 src/router/index 进行相应修改
-
-- 删除 src/router/modules 文件夹
-
-- 删除 src/vendor 文件夹
-
-- 通过 src/settings.js 进行全局配置：
-
-  - title：站点标题，进入某个页面后，格式为：
-
-    ```
-    页面标题 - 站点标题
-    ```
-
-    - showSettings：是否显示右侧悬浮配置按钮 false
-    - tagsView：是否显示页面标签功能条 true
-    - fixedHeader：是否将头部布局固定在窗口顶部。true
-    - sidebarLogo：菜单栏中是否显示LOGO false
+# 后端框架搭建
 
 ## 项目结构
 
-src文件下：
+```shell
+├─db 数据库配置
+├─models自定义组件
+├─node_modules依赖文件
+├─router 路由处理
+├─service 数据库处理
+└─utils JWT,Token配置
+```
 
-- api：接口请求
-- assets：静态资源
-- components：通用组件
-- directive：自定义指令
-- filters：自定义过滤器
-- icons：图标组件
-- layout：布局组件
-- router：路由配置
-- store：状态管理
-- styles：自定义样式
-- utils：通用工具方法
-  - auth.js：token 存取
-  - permission.js：权限检查
-  - request.js：axios 请求封装
-  - index.js：工具方法
-- views：页面
-- permission.js：登录认证和路由跳转
-- settings.js：全局配置
-- main.js：全局入口文件
-- App.vue：全局入口组件
-
-## 项目初始化
-
-### 创建项目
+## 创建项目
 
 ```bash
 mkdir admin-imooc-node
@@ -72,7 +19,7 @@ cd admin-imooc-node
 npm init -y
 ```
 
-#### 安装依赖
+#### 安装express依赖
 
 ```bash
 npm i -S express
@@ -97,8 +44,6 @@ const server = app.listen(5000, function() {
   console.log('Http Server is running on http://%s:%s', address, port)
 })
 ```
-
-## 项目框架搭建
 
 ### 路由
 
@@ -188,7 +133,7 @@ module.exports = {
 "user info..."
 ```
 
-验证 /user/login：
+验证 /user/login，结果：
 
 ```json
 {"code":-1,"msg":"接口不存在","error":404,"errorMsg":"Not Found"}
@@ -353,129 +298,6 @@ export default {
   }
 }
 </script>
-
-<style lang="scss">
-/* 修复input 背景不协调 和光标变色 */
-/* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
-
-$bg:#283443;
-$light_gray:#fff;
-$cursor: #fff;
-
-@supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
-  .login-container .el-input input {
-    color: $cursor;
-  }
-}
-
-/* reset element-ui css */
-.login-container {
-  .el-input {
-    display: inline-block;
-    height: 47px;
-    width: 85%;
-
-    input {
-      background: transparent;
-      border: 0px;
-      -webkit-appearance: none;
-      border-radius: 0px;
-      padding: 12px 5px 12px 15px;
-      color: $light_gray;
-      height: 47px;
-      caret-color: $cursor;
-
-      &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
-        -webkit-text-fill-color: $cursor !important;
-      }
-    }
-  }
-
-  .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    color: #454545;
-  }
-}
-</style>
-
-<style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
-
-.login-container {
-  min-height: 100%;
-  width: 100%;
-  background-color: $bg;
-  overflow: hidden;
-
-  .login-form {
-    position: relative;
-    width: 520px;
-    max-width: 100%;
-    padding: 160px 35px 0;
-    margin: 0 auto;
-    overflow: hidden;
-  }
-
-  .tips {
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 10px;
-
-    span {
-      &:first-of-type {
-        margin-right: 16px;
-      }
-    }
-  }
-
-  .svg-container {
-    padding: 6px 5px 6px 15px;
-    color: $dark_gray;
-    vertical-align: middle;
-    width: 30px;
-    display: inline-block;
-  }
-
-  .title-container {
-    position: relative;
-
-    .title {
-      font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
-      text-align: center;
-      font-weight: bold;
-    }
-  }
-
-  .show-pwd {
-    position: absolute;
-    right: 10px;
-    top: 7px;
-    font-size: 16px;
-    color: $dark_gray;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .thirdparty-button {
-    position: absolute;
-    right: 0;
-    bottom: 6px;
-  }
-
-  @media only screen and (max-width: 470px) {
-    .thirdparty-button {
-      display: none;
-    }
-  }
-}
-</style>
 ```
 
 # 路由和权限控制
@@ -573,18 +395,11 @@ VUE_APP_BASE_API = 'http://localhost:18082'
 # VUE_APP_BASE_API = '/dev-api'
 ```
 
-有两点需要注意：
-
-- 这里我使用了域名 `book.youbaobao.xyz`，大家可以将其替换为你自己注册的域名，如果你还没注册域名，用 `localhost` 也是可行的，但如果要发布到互联网需要注册域名
-- 如果没有申请 https 证书，可以采用 http 协议，同样可以实现登录请求，但是如果你要发布到互联网上建议使用 https 协议安全性会更好
-
 重新启动项目后，发现登录接口已指向我们指定的接口：
 
 ```bash
 Request URL: http://localhostz:18082/user/login
 ```
-
-
 
 ## 跨域问题
 
@@ -599,8 +414,16 @@ npm i -S cors
 ```js
 const cors = require('cors')
 
-// ...
 app.use(cors())
+// 解决跨域问题
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1')
+  res.header("Content-Type", "application/json;charset=utf-8");
+  next();
+});
 ```
 
 再次请求即可成功，这里我们在 Network 中会发现发起了两次 https 请求，这是因为由于触发跨域，所以会首先进行 OPTIONS 请求，判断服务端是否允许跨域请求，如果允许才能实际进行请求。
@@ -772,7 +595,7 @@ express-validator 使用技巧：
 - 使用 `const err = validationResult(req)` 获取错误信息，`err.errors` 是一个数组，包含所有错误信息，如果 `err.errors` 为空则表示校验成功，没有参数错误
 - 如果发现错误我们可以使用 `next(boom.badRequest(msg))` 抛出异常，交给我们自定义的异常处理方法进行处理
 
-## JWT
+# JWT
 
 ### Token 是什么
 
@@ -2025,9 +1848,160 @@ function ifStudent(username) {
 
 同样因为管理员账号能够访问所有的动态路由，这里也采用了学生个人信息页面的方式，当管理员点击时提交选题时，就会判断请求者的账号名，若为`user`则将自动重定向到页面`selcet/errorselect`。若不是则能请求到数据并渲染页面。
 
-提交选题也与修改个人信息类似。
+提交选题其他部分则与修改个人信息类似。
 
 ## 我的选题（教师）（admin，teacher）
+
+生命周期函数请求接口`select/teachersSelect`,请求接口的sql语句如下：
+
+```js
+// 查看教师的选题结果
+/*
+* 	查询的结果为选题表中该教师的选题（WHERE teacheraccount = '${teachername}';），所需专业，当前选中（LEFT OUTER JOIN studentaccount ON select_table.choicestudent = studentaccount.username）的学生姓名（studentaccount.truename）
+*/
+function teacherSelect(teachername) {
+	return querySql(`
+		SELECT
+			select_table.title,
+			select_table.major,
+			studentaccount.truename 
+		FROM
+			select_table 
+		LEFT OUTER JOIN studentaccount ON select_table.choicestudent = studentaccount.username
+		WHERE
+			teacheraccount = '${teachername}';
+
+	`)
+}
+```
+
+因为选题表中的`teacheraccount`中没有`admin`的值且`admin`不能访问提交选题页面，因此当`admin`访问该页面时，不会有任何数据返回，解决了`admin`权限问题。
+
+这里要修改elementUI组建中的`table expand`组件，参见：https://element.eleme.cn/#/zh-CN/component/table#zhan-kai-xing，https://my.oschina.net/u/4320032/blog/3726650
+
+> 官方文档：
+>
+> toggleRowExpansion：用于可展开表格与树形表格，切换某一行的展开状态，如果使用了第二个参数，则是设置这一行展开与否（expanded 为 true 则展开），参数：row, expanded
+
+
+
+尝试：
+
+设置表格的`ref="topicTable" :row-key="getRowKeys"`，
+
+设置点击按钮之后的函数
+
+```vue
+            <template slot-scope="scope">
+              <el-button 
+                  type="primary" 
+                  @click="show(scope.row)" 
+                  :disabled="scope.row.truename== null"
+                >查看学生信息
+              </el-button>
+            </template>
+```
+
+```js
+    show(row) {
+      this.$refs.topicTable.toggleRowExpansion(row, true) // 点击button展开
+    }
+```
+
+报错，提示函数`toggleRowExpansion`未在实例上未定义
+
+```js
+vue.runtime.esm.js?6e6d:619 [Vue warn]: Property or method "toggleRowExpansion" is not defined on the instance but referenced during render. Make sure that this property is reactive, either in the data option, or for class-based components, by initializing the property. See: https://vuejs.org/v2/guide/reactivity.html#Declaring-Reactive-Properties.
+
+vue.runtime.esm.js?6e6d:619 [Vue warn]: Error in v-on handler: "TypeError: _vm.toggleRowExpansion is not a function"
+
+vue.runtime.esm.js?6e6d:1888 TypeError: _vm.toggleRowExpansion is not a function
+    at click 
+```
+
+参见：https://my.oschina.net/u/4407741/blog/3253793进行修改，
+
+先打印相关信息
+
+```js
+    showmore(row){
+      console.log(row);
+      console.log(this.$refs.topicTable); 
+    }
+```
+
+结果
+
+```
+{__ob__: Observer} teacherSelect.vue?d312:87 
+VueComponent {_uid: 79, _isVue: true, $options: {…}, _renderProxy: Proxy, _self: VueComponent, …}
+```
+
+> 在vue实例中能找到这个方法：
+>
+> 1. toggleRowSelection: *ƒ ()*
+>
+> 2. 1. arguments: (...)
+>    2. caller: (...)
+>    3. length: 2
+>    4. name: "bound toggleRowSelection"
+>    5. __proto__: *ƒ ()*
+>    6. *[[TargetFunction]]*: *ƒ toggleRowSelection(row, selected)*
+>    7. *[[BoundThis]]*: VueComponent
+>    8. *[[BoundArgs]]*: Array(0)
+>
+> 3. tooltipEffect: undefined
+
+尝试实现
+
+```js
+    showmore(row){
+      console.log(row);
+      let $table = this.$refs.topicTable
+      $table.toggleRowExpansion(row)
+    }
+```
+
+成功。
+
+将默认显示的小 > 去掉
+
+> 参见：因为我设置了<el-table-column type="expand" width="1"></el-table-column> 会多出1px的边距，所以我们可以再在最外层放一个空的div，设置样式overflow:hidden；
+> 再设置此table的样式margin-left:1px；好了，完美实现。（自己的项目中没有遇到1px影响效果的情况，可以直接设置宽度为1px即可）
+
+```vue
+      <!-- 手风琴效果 -->
+          <div class="top">
+              <el-table-column type="expand" width="1" class="over">
+                <template slot-scope="props">
+                  <el-form label-position="left" inline class="demo-table-expand">
+                    <el-form-item label="选择课题学生姓名">
+                      <span> {{ props.row.truename }}</span>
+                    </el-form-item>
+                  </el-form>
+                </template>
+              </el-table-column>
+          </div>
+```
+
+```css
+  .top{
+    overflow: hidden;
+  }
+  .over{
+    margin-left: 1px;
+  }
+```
+
+发现无效，检察元素，发现箭头类名为`class="el-table__expand-icon"`
+
+设置元素样式：
+
+```css
+  .el-table__expand-icon{
+    visibility: hidden
+  }
+```
 
 
 
