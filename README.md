@@ -1875,6 +1875,8 @@ function teacherSelect(teachername) {
 }
 ```
 
+- 点击按钮 手风琴效果
+
 因为选题表中的`teacheraccount`中没有`admin`的值且`admin`不能访问提交选题页面，因此当`admin`访问该页面时，不会有任何数据返回，解决了`admin`权限问题。
 
 这里要修改elementUI组建中的`table expand`组件，参见：https://element.eleme.cn/#/zh-CN/component/table#zhan-kai-xing，https://my.oschina.net/u/4320032/blog/3726650
@@ -2003,7 +2005,33 @@ VueComponent {_uid: 79, _isVue: true, $options: {…}, _renderProxy: Proxy, _se
   }
 ```
 
+- 取消选择按钮，和查看选中学生详情按钮一致，`disabled`属性绑定到当前行的`truename`不为空：
 
+  > :disabled="scope.row.truename== null"
+
+  点击按钮=>前端提示=> 调用接口 => 修改数据库
+
+  将`select_table`当前选题（`title`）中的`choicestudent`置空。
+
+  将`studentaccount`表中的`choiceselect`置空。
+
+  ```mysql
+  UPDATE select_table 
+  SET choicestudent = NULL,
+  istrue = '可选' 
+  WHERE
+  	title = '${selectTitle}';
+  UPDATE studentaccount
+  SET choiceselect = NULL
+  WHERE
+  	choiceselect = '${selectTitle}'
+  ```
+
+- 删除选题按钮：当没有人选中时才能删除选题，即当前行的`truename`不为空时
+
+  > :disabled="scope.row.truename != null"
+
+  其他与删除选题大致相同。
 
 # 遇到的问题
 

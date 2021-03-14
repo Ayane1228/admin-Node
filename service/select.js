@@ -1,5 +1,5 @@
 const { query } = require('express-validator')
-const { querySql,queryOne} = require('../db')
+const { querySql } = require('../db')
 
 // 创建选题时的默认信息
 function showAddSelect(teacherName){
@@ -86,6 +86,20 @@ function teacherSelect(teachername) {
 
 
 // 教师拒绝学生
+function cancelStudent(selectTitle){
+	return querySql(
+		`
+		UPDATE select_table 
+		SET choicestudent = NULL,
+		istrue = '可选' 
+		WHERE
+			title = '${selectTitle}';
+		UPDATE studentaccount
+		SET choiceselect = NULL
+		WHERE
+			choiceselect = '${selectTitle}'
+		`
+	)
+}
 
-
-module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect }
+module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect,cancelStudent }

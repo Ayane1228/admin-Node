@@ -5,6 +5,7 @@ const { findTeacher,newTeacherPassword,newTeacherAccount,deleteTeacherAccount } 
 const router = express.Router()
 
 
+// 管理员查看教师账号
 router.get('/showTeacherAccount', function (req,res) {
     const TeacherAccount = findTeacher()
     TeacherAccount.then ( allTeacherAccount => {
@@ -16,7 +17,7 @@ router.get('/showTeacherAccount', function (req,res) {
     })
 })
  
-// 修改教师密码
+// 管理员修改教师密码
 router.post('/changeTeacherAccount', function (req,res) {
     const TeacherUsername = req.body.TeacherUsername
     const TeacherPassword = req.body.value;
@@ -27,7 +28,7 @@ router.post('/changeTeacherAccount', function (req,res) {
     })
 })
 
-//添加教师账号
+// 管理员添加教师账号
 router.post('/addTeacherAccount',function(req,res){
     const newTAccount = req.body.newTAccount
     const newTPassword = req.body.newTPassword
@@ -40,6 +41,7 @@ router.post('/addTeacherAccount',function(req,res){
     })
 })
 
+// 管理员删除教师账号
 router.post('/deleteTeacher',function(req,res){
     const deleteTeacherAccountName = req.body.deleteTeacherAccountName
     deleteTeacherAccount(deleteTeacherAccountName).then( (res) => {

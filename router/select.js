@@ -1,6 +1,6 @@
 const express = require('express')
 const Result = require('../models/Result')
-const { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect }  = require('../service/select')
+const { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect,cancelStudent }  = require('../service/select')
 
 const router = express.Router()
 
@@ -84,7 +84,15 @@ router.get('/teachersSelect',function(req,res){
 }) 
 
 // 教师拒绝学生
+router.post('/cancelStudent',function(req,res) {
+    const selectTitle = req.body.row.title
+    cancelStudent(selectTitle).then( (res) => {
+        console.log(res);
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
 
-
+// 教师删除选题
 
 module.exports = router

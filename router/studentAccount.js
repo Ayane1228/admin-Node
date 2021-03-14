@@ -1,3 +1,6 @@
+/**
+ * 账号管理/学生账号管理 
+ */
 const express = require('express')
 const Result = require('../models/Result')
 const { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount } = require('../service/account')
@@ -5,7 +8,7 @@ const { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount } 
 const router = express.Router()
 
 
-// 获取学生信息
+// 管理员查看学生账号信息
 router.get('/showStudentAccount', function (req,res) {
     const studentAccount = findStudent()
     studentAccount.then ( allStudentAccount => {
@@ -17,7 +20,7 @@ router.get('/showStudentAccount', function (req,res) {
     })
 })
 
-// 重置学生密码
+// 管理员重置学生密码
 router.post('/changeStudentAccount', function (req,res) {
     const studentUsername = req.body.studentUsername
     const studentPassword = req.body.value;
@@ -27,7 +30,8 @@ router.post('/changeStudentAccount', function (req,res) {
         console.log(err);
     })
 })
-// 添加学生账号
+
+// 管理员添加学生账号
 router.post('/addStudentAccount',function(req,res){
     const newSAccount = req.body.newSAccount
     const newSPassword = req.body.newSPassword
@@ -43,7 +47,8 @@ router.post('/addStudentAccount',function(req,res){
         console.log(err);
     })
 })
-// 删除学生账号
+
+// 管理员删除学生账号
 router.post('/deleteStudent',function(req,res){
     const deleteStudentAccountName = req.body.deleteStudentAccountName
     deleteStudentAccount(deleteStudentAccountName).then( (res) => {

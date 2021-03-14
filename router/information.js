@@ -3,7 +3,7 @@ const Result = require('../models/Result')
 const { findAdminInformation, findTeacherInformation,findStudnetInformation,changeAdminInf,changeTeachertInf,changeStudentInf } = require('../service/information.js')
 const router = express.Router()
 
-// 获得管理员/教师信息
+// 管理员/教师获得管理员/教师信息
 router.get('/teacherInformation', function (req,res) {
     if (req.user.username == 'admin') {
         const findAdminInf = findAdminInformation()
@@ -30,7 +30,7 @@ router.get('/teacherInformation', function (req,res) {
     }
 })
 
-// 修改管理员信息
+// 管理员修改个人信息
 router.post('/adminChangeInf',function (req,res) {
     changeAdminInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
         .then( (res) => {
@@ -40,7 +40,7 @@ router.post('/adminChangeInf',function (req,res) {
         })
 })
 
-// 修改教师信息
+// 教师修改个人信息
 router.post('/teacherChangeInf',function (req,res) {
     console.log(req.body);
     changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
@@ -52,7 +52,7 @@ router.post('/teacherChangeInf',function (req,res) {
         })
 })
 
-// 获得学生个人信息
+// 学生获得个人信息并判断是否为管理员
 router.get('/studentInformation',function(req,res){
     if (req.user.username == 'admin' ) {
         res.send('管理员无权访问学生个人信息')
@@ -68,7 +68,7 @@ router.get('/studentInformation',function(req,res){
     }
 })
 
-// 修改学生信息
+// 学生修改个人信息
 router.post('/studentChangeInf',function(req,res) {
     const result = req.body
     changeStudentInf(result.trueName,result.newPhone,result.newEmail,result.newIntroduction)
