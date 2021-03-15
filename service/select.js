@@ -1,7 +1,7 @@
 const { query } = require('express-validator')
 const { querySql } = require('../db')
 
-// 创建选题时的默认信息
+// 创建选题时的自动填写默认信息
 function showAddSelect(teacherName){
     return querySql(`
 			SELECT truename,phone,email,office,teacherrank 
@@ -19,24 +19,7 @@ function addSelect(newTitle,teacherName,newMajor,newContent,teacheraccount){
         `)
 }
 
-//显示选题表信息
-function allSelect() {
-    return querySql(`    
-	SELECT
-		select_table.title,
-		select_table.teachername,
-		select_table.major,
-		select_table.content, 
-		select_table.istrue,
-		teacheraccount.phone,
-		teacheraccount.email,
-		teacheraccount.teacherrank
-    FROM
-		select_table
-	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename`)
-}
-
-// 判断是否是学生账号
+// 选题时判断是否是学生账号
 function ifStudent(username) {
 	return querySql(`
 	SELECT
@@ -48,21 +31,39 @@ function ifStudent(username) {
 	`)
 }
 
-// 学生选题
+//选题页面显示选题表信息
+function allSelect() {
+    return querySql(`    
+	SELECT
+		select_table.title,
+		select_table.teachername,
+		select_table.needmajor,
+		select_table.content, 
+		select_table.istrue,
+		teacheraccount.phone,
+		teacheraccount.email,
+		teacheraccount.teacherrank
+    FROM
+		select_table
+	LEFT OUTER JOIN teacheraccount ON select_table.teachername = teacheraccount.truename`)
+}
+
+// 学生选题，更新选题表和学生表
 function choiceSelect(username,title){
 	return querySql(`
-	UPDATE select_table 
-	SET choicestudent = '${username}',istrue = '不可选' 
+	UPDATE select_table,studentaccount
+	SET select_table.choicestudent = '${username}',
+		select_table.istrue = '不可选',
+		studentaccount.choiceselect = '${title}'
 	WHERE
-		title = '${title}';
-	UPDATE studentaccount 
-	SET choiceselect = '${title}'
-	WHERE
-		username = '${username}';
+		select_table.title = '${title}'
+		AND select_table.choicestudent IS NULL
+		AND studentaccount.username = '${username}'
+		AND studentaccount.choiceselect IS NULL
 	`)
 }
 
-// 查看教师的选题结果
+// 教师查看自己的选题结果
 function teacherSelect(teachername) {
 	return querySql(`
 		SELECT
@@ -84,6 +85,20 @@ function teacherSelect(teachername) {
 	`)
 }
 
+// 教师选中学生
+function pickStudent(finalTitle,studentname){
+	return querySql(`
+	UPDATE select_table,
+	studentaccount 
+	SET select_table.finalstudent = '${studentname}',
+	studentaccount.finalselect= '${finalTitle}' 
+	WHERE
+		select_table.title = '${finalTitle}' 
+		AND select_table.finalstudent IS NULL 
+		AND studentaccount.truenam = '${studentname}' 
+		AND studentaccount.finalselect IS NULL
+	`)
+}
 
 // 教师拒绝学生
 function cancelStudent(selectTitle){
@@ -94,6 +109,7 @@ function cancelStudent(selectTitle){
 		istrue = '可选' 
 		WHERE
 			title = '${selectTitle}';
+
 		UPDATE studentaccount
 		SET choiceselect = NULL
 		WHERE
@@ -102,4 +118,18 @@ function cancelStudent(selectTitle){
 	)
 }
 
-module.exports = { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect,cancelStudent }
+// 教师删除选题
+function deleteSelect(deleteTitle){
+	return querySql(`
+		DELETE 
+		FROM	select_table 
+		WHERE 
+			title = '${deleteTitle}'
+	`)
+}
+
+module.exports = { 
+	showAddSelect,addSelect,allSelect,ifStudent,
+	choiceSelect,teacherSelect,cancelStudent,deleteSelect,
+	pickStudent
+}

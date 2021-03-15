@@ -1844,6 +1844,125 @@ function ifStudent(username) {
 }
 ```
 
+### 学生选题（student）
+
+学生点击按钮，提示是否要选题，确定，提交请求到后台。
+
+判断`studentaccount`中的`username`为`req.user.username`的行`choiceselect`为空。
+
+即判断是否已经选题，若为选题能选题,已选过则报错。
+
+- 前端按钮，当`istrue`为不可选时禁用该按钮。
+
+  ```vue
+            <el-table-column
+              prop="submit"
+              label="确认选择"
+              width="180">
+              <template slot-scope="scope">
+                <el-button 
+                    type="primary" 
+                    @click="submit(scope.row)" 
+                    :disabled="scope.row.istrue== '不可选'"
+                  >确认选择
+                </el-button>
+              </template>
+            </el-table-column>
+  ```
+
+- 点击后调用的函数`submit()`，参数`row`该行数据。
+
+  点击后调用提示框`this.$confirm`，点击取消则调用`this.$message.info('取消选题')  `，输出提示：取消选题。
+
+  ```js
+  
+  // 选题
+      submit(row) {
+            this.$confirm(`注意一个学生一次只选择一个选题，这次将选择选题: ${row.title}, 是否继续?`, '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            const token = this.header
+            axios({
+              url:'http://localhost:18082/select/choiceSelect',
+              method:'post',
+              headers:{ Authorization:token.Authorization },
+              data:{ row }
+            }).then((res) => {
+              if(res.data == '不能重复选题' ){
+                this.$message({
+                  type:'error',
+                  message:`${res.data}`
+                })
+              } else {
+                this.$message({
+                type: 'success',
+                message:`${res.data},请刷新页面`
+              });
+              } 
+            }).catch((err) => {
+              console.log(err);
+            })
+          }).catch(() => {
+            this.$message({
+              type: 'info',
+              message: '取消选题'
+            });          
+          })
+        }
+  ```
+
+- 点击确认则请求端口`select/choiceSelect`。
+
+- 调用sql语句。更新选题表、学生账号表中该行的课题中`select_table.title = '${title}'`的已选学生`select_table.choicestudent = '${username}',`和当前登录学生行`studentaccount.username = '${username}'`中的已选课题`studentaccount.choiceselect = '${title}'`并将选题状态置为不可选`select_table.istrue = '不可选',`，条件是已选学生和已选课题均为空。`AND studentaccount.choiceselect IS NULL AND select_table.choicestudent IS NULL`
+
+- 在后端调用sql语句之后，判断响应中的`affectedROWs`是否为0，若为0则表示这次选择不符合查询条件，即已选过选题或选题出现问题,响应给前端`res.send("不能重复选题")`，否则表示修改成功`res.send("选题成功")`。
+
+  > 注意：
+  >
+  > MySql中where有多个判断条件时要使用`AND`相连。
+  >
+  > 判断一行是否为空时要使用`IS`判断。
+  >
+  > 响应时不能只响应数字，会被当作状态码处理。即`res.send(0)`时，0会被当作状态码处理而报错。
+  >
+  > 这里有2次异步请求。调用接口是一次异步请求，调用sql语句是一次，因此不能重复使用`res`。
+
+  ```js
+  // 学生选题
+  router.post('/choiceSelect',function(req,res) {
+      choiceSelect(req.user.username,req.body.row.title)
+      .then( (response) => {
+          // 调用sql语句之后影响行数为0
+          if (response.affectedRows === 0) {
+              res.send("不能重复选题")
+          } else {
+              res.send("选题成功")
+          }
+      }).catch( (err) => {
+          console.log(err);
+      })
+  })
+  ```
+
+  ```js
+  // 学生选题，更新选题表和学生表
+  function choiceSelect(username,title){
+  	return querySql(`
+  	UPDATE select_table,studentaccount
+  	SET select_table.choicestudent = '${username}',
+  		select_table.istrue = '不可选',
+  		studentaccount.choiceselect = '${title}'
+  	WHERE
+  		select_table.title = '${title}'
+  		AND select_table.choicestudent IS NULL
+  		AND studentaccount.username = '${username}'
+  		AND studentaccount.choiceselect IS NULL
+  	`)
+  }
+  ```
+
 ## 提交选题（admin，teacher）
 
 同样因为管理员账号能够访问所有的动态路由，这里也采用了学生个人信息页面的方式，当管理员点击时提交选题时，就会判断请求者的账号名，若为`user`则将自动重定向到页面`selcet/errorselect`。若不是则能请求到数据并渲染页面。
@@ -1875,7 +1994,7 @@ function teacherSelect(teachername) {
 }
 ```
 
-- 点击按钮 手风琴效果
+- 点击查看详情按钮 手风琴效果
 
 因为选题表中的`teacheraccount`中没有`admin`的值且`admin`不能访问提交选题页面，因此当`admin`访问该页面时，不会有任何数据返回，解决了`admin`权限问题。
 
@@ -2032,6 +2151,14 @@ VueComponent {_uid: 79, _isVue: true, $options: {…}, _renderProxy: Proxy, _se
   > :disabled="scope.row.truename != null"
 
   其他与删除选题大致相同。
+  
+- 确认选中，同上。
+
+## 我的选题（学生）
+
+展示学生当前选中的选题以及最终的选题结果。
+
+
 
 # 遇到的问题
 
@@ -2824,7 +2951,7 @@ TypeError: res.send is not a function
 
 ```
 
-两个异步请求的res不相同,
+两个异步请求的res不能相同
 
 解决：修改其中一个的形参，避免重复。
 
@@ -2843,5 +2970,22 @@ router.post('/choiceSelect',function(req,res) {
 })
 ```
 
+错误：删除选题，点击无效
+
+解决：检查`methods`中的方法名和点击时的方法名。发现一致。
+
+修改函数名为`deleteselect`，`delete`是保留字。
 
 
+
+错误：sql数据更新不能判断到数据
+
+解决：[Mysql命令-以NULL做where条件过滤时应该写 IS NULL;](https://www.cnblogs.com/xiaozong/p/5269840.html)
+
+
+
+错误：执行sql语句报错`ERR_HTTP_INVALID_STATUS_CODE`
+
+解决：send()中的参数如果为数字，会默认为状态码，当传的数值不存在状态码中，会报无效状态码的错误。
+
+修改`res.send()`的内容

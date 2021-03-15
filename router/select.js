@@ -1,6 +1,9 @@
 const express = require('express')
 const Result = require('../models/Result')
-const { showAddSelect,addSelect,allSelect,ifStudent,choiceSelect,teacherSelect,cancelStudent }  = require('../service/select')
+const 
+    {   showAddSelect,addSelect,allSelect,ifStudent,
+        choiceSelect,teacherSelect,cancelStudent,
+        deleteSelect,pickStudent }  = require('../service/select')
 
 const router = express.Router()
 
@@ -22,7 +25,7 @@ router.get('/showSelect', function (req,res) {
     }
 })
 
-// 发布选题
+// 教师发布选题
 router.post('/addSelect',function (req,res) {
     const result = req.body
     addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent,req.user.username).then( (res) => {
@@ -62,8 +65,14 @@ router.get('/isStudent',function(req,res) {
 
 // 学生选题
 router.post('/choiceSelect',function(req,res) {
-    choiceSelect(req.user.username,req.body.row.title).then( (res) => {
-        console.log(res);
+    choiceSelect(req.user.username,req.body.row.title)
+    .then( (response) => {
+        // 调用sql语句之后影响行数为0
+        if (response.affectedRows === 0) {
+            res.send("不能重复选题")
+        } else {
+            res.send("选题成功")
+        }
     }).catch( (err) => {
         console.log(err);
     })
@@ -94,5 +103,24 @@ router.post('/cancelStudent',function(req,res) {
 })
 
 // 教师删除选题
+router.post('/deleteSelect',function(req,res) {
+    const deleteTitle = req.body.row.title
+     deleteSelect(deleteTitle).then( (res) => {
+         console.log(res);
+     }).catch( (err) => {
+         console.log(err);
+     })
+})
+
+// 教师选中学生
+router.post('/pickStudent',function(req,res) {
+    const finalTitle = req.body.row.title
+    const studentID = req.body.row.truename;
+    pickStudent(finalTitle,studentname).then( (res) => {
+        console.log(res);
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
 
 module.exports = router
