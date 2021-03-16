@@ -13,9 +13,11 @@ function showAddSelect(teacherName){
 function addSelect(newTitle,teacherName,newMajor,newContent,teacheraccount){
     return querySql(
         `
-		INSERT INTO select_table ( id, title, teachername, needmajor, content, istrue, teacheraccount )
+		INSERT INTO 
+		select_table 
+		( id, title, teachername, needmajor, content, istrue, teacheraccount, pick )
 		VALUES
-			( id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选', '${teacheraccount}' ) 
+			( id, '${newTitle}', '${teacherName}', '${newMajor}', '${newContent}', '可选', '${teacheraccount}', '待确认' ) 
         `)
 }
 
@@ -54,6 +56,7 @@ function choiceSelect(username,title){
 	UPDATE select_table,studentaccount
 	SET select_table.choicestudent = '${username}',
 		select_table.istrue = '不可选',
+		select_table.pick = '待确认',
 		studentaccount.choiceselect = '${title}'
 	WHERE
 		select_table.title = '${title}'
@@ -69,13 +72,14 @@ function teacherSelect(teachername) {
 		SELECT
 			select_table.title,
 			select_table.needmajor,
+			select_table.pick,
 			studentaccount.truename,
 			studentaccount.studentID, 
 			studentaccount.classID,
 			studentaccount.major, 
 			studentaccount.phone,
 			studentaccount.email,
-			studentaccount.introduction  
+			studentaccount.introduction
 		FROM
 			select_table 
 		LEFT OUTER JOIN studentaccount ON select_table.choicestudent = studentaccount.username
@@ -91,11 +95,12 @@ function pickStudent(finalTitle,studentname){
 	UPDATE select_table,
 	studentaccount 
 	SET select_table.finalstudent = '${studentname}',
+		select_table.pick = '已确认',
 	studentaccount.finalselect= '${finalTitle}' 
 	WHERE
 		select_table.title = '${finalTitle}' 
 		AND select_table.finalstudent IS NULL 
-		AND studentaccount.truenam = '${studentname}' 
+		AND studentaccount.truename = '${studentname}' 
 		AND studentaccount.finalselect IS NULL
 	`)
 }

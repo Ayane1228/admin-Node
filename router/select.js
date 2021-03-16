@@ -25,7 +25,7 @@ router.get('/showSelect', function (req,res) {
     }
 })
 
-// 教师发布选题
+// 教师选题
 router.post('/addSelect',function (req,res) {
     const result = req.body
     addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent,req.user.username).then( (res) => {
@@ -78,8 +78,8 @@ router.post('/choiceSelect',function(req,res) {
     })
 })
 
-// 教师查看选题结果
-router.get('/teachersSelect',function(req,res){
+// 查看选题
+router.get('/teachersSelect',function(req,res){    
     const allTSelect = teacherSelect(req.user.username)
     allTSelect.then( teacherAllSelect => {
         if( teacherAllSelect ) {
@@ -115,12 +115,15 @@ router.post('/deleteSelect',function(req,res) {
 // 教师选中学生
 router.post('/pickStudent',function(req,res) {
     const finalTitle = req.body.row.title
-    const studentID = req.body.row.truename;
+    const studentname = req.body.row.truename;
     pickStudent(finalTitle,studentname).then( (res) => {
         console.log(res);
     }).catch( (err) => {
         console.log(err);
     })
 })
+
+// 学生查看选题结果
+
 
 module.exports = router
