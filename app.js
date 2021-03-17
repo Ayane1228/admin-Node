@@ -1,3 +1,6 @@
+/**
+ * 后端入口文件
+ */
 const express = require('express')
 const router = require('./router/index')
 const bodyParser = require('body-parser')
@@ -25,8 +28,7 @@ app.all('*', function(req, res, next) {
 // 监听 / 路径的 get 请求
 app.get('/',router)
 
-// 使 express 监听18082
+// express 监听18082
 const server = app.listen(18082, function() {
-  // 服务开始
   console.log('Http Server is running on 18082')
 })

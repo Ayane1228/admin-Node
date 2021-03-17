@@ -1,7 +1,10 @@
+/*
+ *  教师账号管理 
+ */
+
 const express = require('express')
 const Result = require('../models/Result')
 const { findTeacher,newTeacherPassword,newTeacherAccount,deleteTeacherAccount } = require('../service/account')
-
 const router = express.Router()
 
 

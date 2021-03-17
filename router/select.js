@@ -1,9 +1,14 @@
+/*
+ *  选题相关接口  
+ */
+
 const express = require('express')
 const Result = require('../models/Result')
 const 
     {   showAddSelect,addSelect,allSelect,ifStudent,
         choiceSelect,teacherSelect,cancelStudent,
-        deleteSelect,pickStudent }  = require('../service/select')
+        deleteSelect,pickStudent,studentSelect
+     }  = require('../service/select')
 
 const router = express.Router()
 
@@ -78,7 +83,7 @@ router.post('/choiceSelect',function(req,res) {
     })
 })
 
-// 查看选题
+// 教师查看选题
 router.get('/teachersSelect',function(req,res){    
     const allTSelect = teacherSelect(req.user.username)
     allTSelect.then( teacherAllSelect => {
@@ -124,6 +129,16 @@ router.post('/pickStudent',function(req,res) {
 })
 
 // 学生查看选题结果
-
+router.get('/studentSelect',function(req,res){
+    studentSelect(req.user.username).then(studentSelect => {
+        if (studentSelect) {
+            new Result(studentSelect,'查询到选题').success(res)
+        } else {
+            new Result('查询失败').fail(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
 
 module.exports = router

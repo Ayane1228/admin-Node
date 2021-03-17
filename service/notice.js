@@ -1,17 +1,30 @@
 const { querySql,queryOne} = require('../db')
 
-// 返回值就是查询数据库的结果
+// 查询公告
 function findNotice() {
-    return querySql(`SELECT noticeTitle,noticeTime,noticeContent FROM notice`)
+    return querySql(`
+            SELECT noticeTitle,noticeTime,noticeContent 
+            FROM notice
+          `)
   }
 
+// 发布公告
 function addNotice(newTitle,newContent) {
-  // 插入语句
-  return queryOne(`INSERT INTO notice VALUES (id,'${newTitle}',Now(),'${newContent}')`)
+  return queryOne(`
+          INSERT INTO 
+          notice 
+          VALUES 
+          (id,'${newTitle}',Now(),'${newContent}')
+        `)
 }
 
+// 删除公告
 function deleteNotice(deleteNoticetitle,deleteNoticeTime) {
-  return queryOne(`DELETE FROM notice WHERE noticeTitle = '${deleteNoticetitle}'`)
+  return queryOne(`
+          DELETE FROM notice 
+          WHERE 
+          noticeTitle = '${deleteNoticetitle}'
+        `)
 }
 
 module.exports = { findNotice,addNotice,deleteNotice }

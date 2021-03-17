@@ -1,10 +1,16 @@
+/*
+ * 个人信息路由 
+ */
+
 const express = require('express')
 const Result = require('../models/Result')
-const { findAdminInformation, findTeacherInformation,findStudnetInformation,changeAdminInf,changeTeachertInf,changeStudentInf } = require('../service/information.js')
+const { findAdminInformation, findTeacherInformation,findStudnetInformation,
+        changeAdminInf,changeTeachertInf,changeStudentInf } = require('../service/information.js')
 const router = express.Router()
 
 // 管理员/教师获得管理员/教师信息
 router.get('/teacherInformation', function (req,res) {
+    // 判断账号是否为管理员
     if (req.user.username == 'admin') {
         const findAdminInf = findAdminInformation()
         findAdminInf.then(
@@ -42,18 +48,18 @@ router.post('/adminChangeInf',function (req,res) {
 
 // 教师修改个人信息
 router.post('/teacherChangeInf',function (req,res) {
-    console.log(req.body);
     changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
         .then( (res) => {
-            new Result('修改教师成功').success(res)
+            new Result('修改教师信息成功').success(res)
         }).catch( (err) => {
             console.log(err);
-            new Result('失败123').fail(res)
+            new Result('修改教师信息失败').fail(res)
         })
 })
 
 // 学生获得个人信息并判断是否为管理员
 router.get('/studentInformation',function(req,res){
+    // 判断是否为管理员
     if (req.user.username == 'admin' ) {
         res.send('管理员无权访问学生个人信息')
     } else {

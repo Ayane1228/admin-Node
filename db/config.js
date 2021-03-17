@@ -1,3 +1,4 @@
+// 配置数据库并导出
 module.exports = {
     // 主机地址
     host: 'localhost',

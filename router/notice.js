@@ -1,17 +1,15 @@
-/**
+/*
  * 最新通知接口
  */
+
 const express = require('express')
 const Result = require('../models/Result')
-
 const router = express.Router()
-
 const { findNotice,addNotice,deleteNotice } = require('../service/notice')
 
-// 最新公告展示
+// 最新公告
 router.get('/shownotice', function(req, res) {
   const notice = findNotice()
-  // notice 是一个Promise对象
   notice.then( allnotice => {
     if( allnotice ) {
       new Result(allnotice,'获取最新公告成功').success(res)
@@ -36,7 +34,6 @@ router.post('/changenotice', function(req,res) {
 // 管理员删除公告
 router.post('/deleteNotice', function(req,res) {
   const deleteNoticeTitle = req.body.deleteNotice
-  const deleteNoticeTime = req.body.deleteNoticeTime 
   deleteNotice(deleteNoticeTitle).then( () => {
     console.log('删除成功');
   }).catch( (err) => {

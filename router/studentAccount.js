@@ -4,7 +4,6 @@
 const express = require('express')
 const Result = require('../models/Result')
 const { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount } = require('../service/account')
-
 const router = express.Router()
 
 
@@ -20,7 +19,7 @@ router.get('/showStudentAccount', function (req,res) {
     })
 })
 
-// 管理员重置学生密码
+// 管理员修改学生密码
 router.post('/changeStudentAccount', function (req,res) {
     const studentUsername = req.body.studentUsername
     const studentPassword = req.body.value;

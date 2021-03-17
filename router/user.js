@@ -1,13 +1,16 @@
+/*
+ * 登录模块 
+ */
 const express = require('express')
 const Result = require('../models/Result')
 
-// 验证，使用判断条件
+// 登录验证，使用判断条件
 const { body, validationResult } = require('express-validator')
 
-// token
+// 导入JWT
 const jwt = require('jsonwebtoken')
 
-// 密钥，过期时间
+// 导入密钥，过期时间
 const { PRIVATE_KEY, JWT_EXPIRED } = require('../utils/constant')
 
 // login方法：登录，用户点击登录
@@ -20,7 +23,7 @@ const { decode } = require('../utils/index')
 const boom  = require('boom')
 const router = express.Router()
 
-// 创建请求接口
+// 登录接口
 router.post('/login',
   //post请求中的数组使用body方法进行验证,并抛出信息
 [
@@ -38,40 +41,24 @@ function(req,res,next){
     // 交给boom方法处理（自定义中间件router/index.js中）,400错误,并传递msg
     next(boom.badRequest(msg))
   } else {
-  //查询用户
+  //  登陆成功，查询用户
   const {username,password} = req.body
   login(username,password).then(user => {
     if (!user || user.length ===0 ) {
       new Result('登录失败').fail(res)
     } else {
-      // 生成token，使用sign()方法，参数为username，密钥，过期时间
+      // 使用sign()方法生成token，参数为username，密钥，过期时间
       const token = jwt.sign(
         { username },
         PRIVATE_KEY,
         { expiresIn: JWT_EXPIRED }
       )
-      // 传给前端
+      // 将Token传给前端保存到Local Strage中
       new Result({ token }, '登录成功').success(res)
-    }
-  })
+      }
+    })
   }
 })
 
-router.get('/info', function(req, res) {
-  //解析token
-  const decoded = decode(req)
-  if (decoded && decoded.username) {
-    findUser(decoded.username).then(user => {
-      if (user) {
-        user.roles = [user.role]
-        new Result(user, '获取用户信息成功').success(res)
-      } else {
-        new Result('获取用户信息失败').fail(res)
-      }
-    })
-  } else {
-    new Result('用户信息解析失败').fail(res)
-  }
-})
 
 module.exports = router

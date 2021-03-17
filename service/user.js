@@ -1,11 +1,20 @@
 const { querySql,queryOne} = require('../db')
 
+// 登录查询
 function login(username, password) {
-    const sql = `select * from user where username='${username}' and password='${password}'`
-    return querySql(sql)
+    return querySql(`
+            SELECT * 
+            FROM user 
+            WHERE username='${username}' AND 
+            password='${password}'`)
   }
+
+// 判断权限 
 function findUser(username) {
-  return queryOne(`select id,username,role from user where username='${username}'`)
+  return queryOne(`
+          SELECT id,username,role 
+          FROM user 
+          WHERE username='${username}'`)
 }  
 
-module.exports = {login,findUser}
+module.exports = {  login,findUser  }

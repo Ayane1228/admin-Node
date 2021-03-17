@@ -1,3 +1,6 @@
+/**
+ * JWT相关配置
+ */
 module.exports = {
     CODE_ERROR: -1,
     CODE_SUCCESS: 0,  

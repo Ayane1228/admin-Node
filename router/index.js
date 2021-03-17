@@ -1,3 +1,8 @@
+/*
+ *  路由入口文件 
+ */
+
+// 导入路由所需模块
 const { CODE_ERROR } = require('../utils/constant.js')
 const express = require('express')
 const boom = require('boom')
@@ -7,35 +12,35 @@ const studentAccount = require('./studentAccount')
 const teacherAccount = require('./teacherAccount')
 const information = require('./information')
 const select = require('./select')
-
 const jwtAuth  = require('./jwt')
 const Result = require('../models/Result')
 
 // 注册路由
 const router = express.Router()
 
+// 使用JWT
 router.use(jwtAuth)
 
+// 通过不同模块对不同路由进行处理,进行解耦
 router.get('/', function(req, res) {
   res.send('欢迎管理后台接口')
 })
 
-// 通过 userRouter 来处理 /user 路由，对路由处理进行解耦
+// 登录接口
 router.use('/user', userRouter)
-
-// 通过 noticeRouter 来处理 /notice 路由，对路由处理进行解耦
+// 公告接口
 router.use('/notice', noticeRouter)
-
+// 学生账号
 router.use('/studentAccount', studentAccount)
-
+// 教师账号
 router.use('/TeacherAccount',teacherAccount)
-
+// 个人信息
 router.use('/information',information)
-
+// 论文选题
 router.use('/select',select)
 /**
  * 集中处理404请求的中间件
- * 注意：该中间件必须放在正常处理流程之后
+ * 该中间件必须放在正常处理流程之后
  * 否则，会拦截正常请求
  */
 router.use((req, res, next) => {
@@ -44,9 +49,8 @@ router.use((req, res, next) => {
 
 /**
  * 自定义路由异常处理中间件
- * 注意两点：
- * 第一，方法的参数不能减少
- * 第二，方法的必须放在路由最后
+ * 方法的参数不能减少
+ * 方法的必须放在路由最后
  */
 router.use((err, req, res, next) => {
   // 如果是token错误

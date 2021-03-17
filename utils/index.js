@@ -1,3 +1,6 @@
+/*
+ *  判断token 
+ */
 const jwt = require('jsonwebtoken')
 const { PRIVATE_KEY } = require('./constant')
 // 解析token

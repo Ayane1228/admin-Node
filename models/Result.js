@@ -1,3 +1,6 @@
+/*
+ *  自定义错误处理中间件 
+ */
 const {
     CODE_ERROR,
     CODE_SUCCESS,
