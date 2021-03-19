@@ -3,7 +3,11 @@
  */
 const express = require('express')
 const Result = require('../models/Result')
-const { findStudent,newStudentPassword,newStudentAccount,deleteStudentAccount } = require('../service/account')
+const { 
+    checkAccount,
+    findStudent,newStudentPassword,newStudentAccount,
+    deleteStudentAccount,queryStudentAccount 
+        } = require('../service/account')
 const router = express.Router()
 
 
@@ -39,10 +43,18 @@ router.post('/addStudentAccount',function(req,res){
     const newStudentClassID = req.body.newStudentClassID
     const newStudentCollage = req.body.newStudentMajor.split('/')[0]
     const newStudentMajor  = req.body.newStudentMajor.split('/')[1]
-    newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor)
-    .then((res) => {
-        console.log(res);
-    }).catch( (err) => { 
+    checkAccount(newSAccount).then( (checkStudnet) => {
+        if (checkStudnet.length === 1) {
+            new Result(checkStudnet,'账号名已存在,请重新尝试').success(res)
+        } else {
+            newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStudentClassID,newStudentCollage,newStudentMajor)
+                .then((result) => {
+                    new Result(result,'新增账号成功').success(res)
+                }).catch( (errors) => { 
+                    console.log(errors);
+            })
+        }
+    }).catch( (err) => {
         console.log(err);
     })
 })
@@ -50,8 +62,21 @@ router.post('/addStudentAccount',function(req,res){
 // 管理员删除学生账号
 router.post('/deleteStudent',function(req,res){
     const deleteStudentAccountName = req.body.deleteStudentAccountName
-    deleteStudentAccount(deleteStudentAccountName).then( (res) => {
-        console.log(res);
+    queryStudentAccount(deleteStudentAccountName).then( (exitStudent) =>{
+        // 学生存在已选题情况
+        if (exitStudent.length === 1) {
+            new Result(exitStudent,'存在选题结果').success(res)
+        } else {
+            deleteStudentAccount(deleteStudentAccountName).then( (deleteStudent) => {
+                if ( deleteStudent ) {
+                    new Result(deleteStudent,'删除成功').success(res)
+                } else {
+                    new Result('删除失败').fail(res)
+                }
+            }).catch( (err) => {
+                console.log(err);
+            })
+        }
     }).catch( (err) => {
         console.log(err);
     })

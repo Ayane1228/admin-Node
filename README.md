@@ -2156,32 +2156,11 @@ VueComponent {_uid: 79, _isVue: true, $options: {…}, _renderProxy: Proxy, _se
 
 ## 我的选题（学生）
 
-展示学生当前选中的选题以及最终的选题结果。
+无权限控制，但在前端设置默认值为null，当为学生且有选中的选题时才会展示当前选中的选题以及最终的选题结果。
 
 
 
 # 遇到的问题
-
-测试用接口
-
-```js
-// router.get('/info', function(req, res) {
-//   //解析token
-//   const decoded = decode(req)
-//   if (decoded && decoded.username) {
-//     findUser(decoded.username).then(user => {
-//       if (user) {
-//         user.roles = [user.role]
-//         new Result(user, '获取用户信息成功').success(res)
-//       } else {
-//         new Result('获取用户信息失败').fail(res)
-//       }
-//     })
-//   } else {
-//     new Result('用户信息解析失败').fail(res)
-//   }
-// })
-```
 
 错误：只能访问`http://127.0.0.1:18082/`请求其他都没有响应。
 

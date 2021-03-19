@@ -9,10 +9,9 @@ const { findNotice,addNotice,deleteNotice } = require('../service/notice')
 
 // 最新公告
 router.get('/shownotice', function(req, res) {
-  const notice = findNotice()
-  notice.then( allnotice => {
-    if( allnotice ) {
-      new Result(allnotice,'获取最新公告成功').success(res)
+  findNotice().then( allNotice => {
+    if( allNotice ) {
+      new Result(allNotice,'获取最新公告成功').success(res)
     } else {
       new Result('获取最新公告失败').fail(res)
     }

@@ -6,10 +6,12 @@ const express = require('express')
 const Result = require('../models/Result')
 const { findAdminInformation, findTeacherInformation,findStudnetInformation,
         changeAdminInf,changeTeachertInf,changeStudentInf } = require('../service/information.js')
+const { newStudentPassword,newTeacherPassword } = require('../service/account')        
+const { response } = require('express')
 const router = express.Router()
 
 // 管理员/教师获得管理员/教师信息
-router.get('/teacherInformation', function (req,res) {
+router.get('/teacherInformation', function(req,res){
     // 判断账号是否为管理员
     if (req.user.username == 'admin') {
         const findAdminInf = findAdminInformation()
@@ -37,7 +39,7 @@ router.get('/teacherInformation', function (req,res) {
 })
 
 // 管理员修改个人信息
-router.post('/adminChangeInf',function (req,res) {
+router.post('/adminChangeInf',function(req,res) {
     changeAdminInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
         .then( (res) => {
             new Result('成功').success(res)
@@ -47,7 +49,7 @@ router.post('/adminChangeInf',function (req,res) {
 })
 
 // 教师修改个人信息
-router.post('/teacherChangeInf',function (req,res) {
+router.post('/teacherChangeInf',function(req,res) {
     changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
         .then( (res) => {
             new Result('修改教师信息成功').success(res)
@@ -57,6 +59,16 @@ router.post('/teacherChangeInf',function (req,res) {
         })
 })
 
+// 教师修改密码
+router.post('/changeTeacherPassword',function(req,res) {
+    const teacherUsername = req.user.username
+    const teacherPassword = req.body.value;
+    newStudentPassword(teacherUsername,teacherPassword).then( (response) => {
+        res.send('修改成功')
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
 // 学生获得个人信息并判断是否为管理员
 router.get('/studentInformation',function(req,res){
     // 判断是否为管理员
@@ -84,6 +96,17 @@ router.post('/studentChangeInf',function(req,res) {
         .catch( (err) => {
             new Result('更新学生失败').fail(err)
         })
+})
+
+// 学生修改密码
+router.post('/changeStudentPassword',function(req,res) {
+    const studentUsername = req.user.username
+    const studentPassword = req.body.value;
+    newStudentPassword(studentUsername,studentPassword).then( (response) => {
+        res.send('修改成功')
+    }).catch( (err) => {
+        console.log(err);
+    })
 })
 
 module.exports = router
