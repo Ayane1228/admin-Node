@@ -1,12 +1,15 @@
 const { query } = require('express-validator')
 const { querySql,queryOne } = require('../db')
 
-// 自动填写创建选题时地默认信息
+// 自动填写创建选题时的默认信息
 function showAddSelect(teacherName){
     return querySql(`
-			SELECT truename,phone,email,office,teacherrank 
-			FROM teacheraccount 
-			WHERE username = '${teacherName}' 
+			SELECT 
+				truename,phone,email,office,teacherrank 
+			FROM 
+				teacheraccount 
+			WHERE 
+				username = '${teacherName}' 
 		`)
 }
 
@@ -66,6 +69,20 @@ function choiceSelect(username,title){
 		`)
 }
 
+// 学生取消选题
+function cancelSelect(choicestudent){
+	return querySql(`
+			UPDATE select_table 
+			SET istrue = '可选',choicestudent = NULL 
+			WHERE
+				choicestudent = '${choicestudent}';
+			UPDATE studentaccount
+			SET choiceselect = NULL
+			WHERE
+				username = '${choicestudent}'
+
+	`)
+}
 // 教师查看选题结果
 function teacherSelect(teachername) {
 	return querySql(`
@@ -151,6 +168,7 @@ function studentSelect(choicestudent){
 
 module.exports = { 
 	showAddSelect,addSelect,allSelect,ifStudent,
-	choiceSelect,teacherSelect,cancelStudent,deleteSelect,
+	choiceSelect,cancelSelect,
+	teacherSelect,cancelStudent,deleteSelect,
 	pickStudent,studentSelect
 }

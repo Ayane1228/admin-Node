@@ -5,7 +5,7 @@ const { querySql,queryOne} = require('../db')
 function findStudent() {
     return querySql(`
             SELECT 
-            username,password,truename,studentID,classID,college,major,phone,email 
+            username,password,truename,studentID,classID,college,major
             FROM studentaccount
             `)
 }
@@ -77,7 +77,7 @@ function deleteStudentAccount(deleteStudentAccountName){
 function findTeacher() {
   return querySql(`
           SELECT 
-          username,password,truename,teacherID,phone,email,teacherrank 
+          username,password,truename,teacherID,teacherrank 
           FROM 
           teacheraccount
           `)

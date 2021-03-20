@@ -41,20 +41,19 @@ router.get('/teacherInformation', function(req,res){
 // 管理员修改个人信息
 router.post('/adminChangeInf',function(req,res) {
     changeAdminInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
-        .then( (res) => {
-            new Result('成功').success(res)
-        }).catch( (err) => {
-            new Result('失败').fail(res)
+        .then( (results) => {
+            new Result('修改管理员信息成功').success(res)
+        }).catch( (errors) => {
+            new Result('修改管理员信息成功').fail(res)
         })
 })
 
 // 教师修改个人信息
 router.post('/teacherChangeInf',function(req,res) {
     changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
-        .then( (res) => {
+        .then( (result) => {
             new Result('修改教师信息成功').success(res)
-        }).catch( (err) => {
-            console.log(err);
+        }).catch( (errors) => {
             new Result('修改教师信息失败').fail(res)
         })
 })
@@ -64,9 +63,9 @@ router.post('/changeTeacherPassword',function(req,res) {
     const teacherUsername = req.user.username
     const teacherPassword = req.body.value;
     newStudentPassword(teacherUsername,teacherPassword).then( (response) => {
-        res.send('修改成功')
+        new Result(response,'教师修改密码成功').success(res)
     }).catch( (err) => {
-        console.log(err);
+        new Result('教师修改密码失败').fail(res)
     })
 })
 // 学生获得个人信息并判断是否为管理员
@@ -90,11 +89,11 @@ router.get('/studentInformation',function(req,res){
 router.post('/studentChangeInf',function(req,res) {
     const result = req.body
     changeStudentInf(result.trueName,result.newPhone,result.newEmail,result.newIntroduction)
-        .then( (res) => {
-            new Result('更新学生成功').success(res)
+        .then( (result) => {
+            new Result('修改学生信息成功').success(res)
         }) 
-        .catch( (err) => {
-            new Result('更新学生失败').fail(err)
+        .catch( (errors) => {
+            new Result('修改学生信息失败').fail(err)
         })
 })
 
@@ -103,9 +102,9 @@ router.post('/changeStudentPassword',function(req,res) {
     const studentUsername = req.user.username
     const studentPassword = req.body.value;
     newStudentPassword(studentUsername,studentPassword).then( (response) => {
-        res.send('修改成功')
+        new Result(response,'学生修改密码成功').success(res)
     }).catch( (err) => {
-        console.log(err);
+        new Result('学生修改密码失败').fail(res)
     })
 })
 

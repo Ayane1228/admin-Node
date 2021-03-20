@@ -6,7 +6,8 @@ const express = require('express')
 const Result = require('../models/Result')
 const 
     {   showAddSelect,addSelect,allSelect,ifStudent,
-        choiceSelect,teacherSelect,cancelStudent,
+        choiceSelect,cancelSelect,
+        teacherSelect,cancelStudent,
         deleteSelect,pickStudent,studentSelect
      }  = require('../service/select')
 
@@ -83,6 +84,18 @@ router.post('/choiceSelect',function(req,res) {
     })
 })
 
+// 学生取消选题
+router.get('/cancelSelect',function(req,res){
+    cancelSelect(req.user.username).then( (results) => {
+        if (results[0].changedRows === 1 ){
+            new Result(results,'取消选题成功').success(res)
+        } else {
+            new Result(results,'取消选题失败').fail(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
 // 教师查看选题
 router.get('/teachersSelect',function(req,res){    
     const allTSelect = teacherSelect(req.user.username)

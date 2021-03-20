@@ -2989,3 +2989,22 @@ router.post('/choiceSelect',function(req,res) {
 解决：send()中的参数如果为数字，会默认为状态码，当传的数值不存在状态码中，会报无效状态码的错误。
 
 修改`res.send()`的内容
+
+
+
+报错
+
+```shell
+studentSelect.vue?42f2:143 TypeError: Cannot read property 'title' of undefined
+    at eval (studentSelect.vue?42f2:134)
+```
+
+解决https://blog.csdn.net/jiangshanwe/article/details/86499898
+
+> 使用{{}}文本插值方式，通过.级联显示内容。如下代码，foo通过后端接口返回。
+> 后端内容返回之前，控制台会Cannot read property ‘xxx’ of undefined的错误。
+
+```
+
+```
+
