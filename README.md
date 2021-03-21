@@ -1716,7 +1716,7 @@ router.get('/teacherInformation', function (req,res) {
 
 > ```vue
 > <el-tag :type="scope.row.istrue=='可选' ? 'success' : 'danger'" >
->     {{scope.row.istrue}}
+>  {{scope.row.istrue}}
 > </el-tag>
 > ```
 >
@@ -1843,6 +1843,49 @@ function ifStudent(username) {
 	`)
 }
 ```
+
+> `el-tag`过滤
+>
+> filters：过滤条件
+>
+> filter-method：过滤方法
+>
+> filter-placement：过滤弹出框的定位
+>
+> :filtered-value：默认值为可选
+
+```vue
+          <!-- 是否可选 -->
+          <el-table-column
+            prop="isTrue"
+            width="180"
+            label="当前是否可选"
+            :filters="[{ text: '可选', value: '可选' }, { text: '不可选', value: '不可选' }]"
+            :filter-method="filterIsTrue"
+            :filtered-value="['可选']"
+            filter-placement="bottom-end">
+            <template slot-scope="scope">
+            <!-- 三元运算符定义tag的内容 -->
+            <el-tag
+              :type="scope.row.istrue=='可选' ? 'success' : 'danger'" >
+                {{scope.row.istrue}}
+            </el-tag>
+            </template>
+          </el-table-column>
+```
+
+```js
+    // 过滤是否可选
+    filterIsTrue(value,row) {
+      return row.istrue === value
+    }
+```
+
+
+
+
+
+
 
 ### 学生选题（student）
 
@@ -2161,6 +2204,14 @@ VueComponent {_uid: 79, _isVue: true, $options: {…}, _renderProxy: Proxy, _se
 
 
 # 遇到的问题
+
+问题:写到一半发现，使用的都是英文，要将vue-element-admin切换为中文 
+
+解决：https://blog.csdn.net/zqq_1119/article/details/110390463?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~aggregatepage~first_rank_v2~rank_aggregation-3-110390463.pc_agg_rank_aggregation&utm_term=element+%E5%88%87%E6%8D%A2%E4%B8%AD%E6%96%87&spm=1000.2123.3001.4430
+
+在`mian.js`注释掉` // locale: enLang // 如果使用中文，无需设置，请删除`
+
+
 
 错误：只能访问`http://127.0.0.1:18082/`请求其他都没有响应。
 
