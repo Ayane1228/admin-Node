@@ -24,10 +24,10 @@ router.get('/showTeacherAccount', function (req,res) {
 router.post('/changeTeacherAccount', function (req,res) {
     const TeacherUsername = req.body.TeacherUsername
     const TeacherPassword = req.body.value;
-    newTeacherPassword(TeacherUsername,TeacherPassword).then( (res) => {
-        console.log(res);
+    newTeacherPassword(TeacherUsername,TeacherPassword).then( (results) => {
+        new Result(results,'修改教师密码成功，请刷新页面').success(res)
     }).catch( (err) => {
-        console.log(err);
+        new Result('修改密码失败，请重试')
     })
 })
 
@@ -41,11 +41,11 @@ router.post('/addTeacherAccount',function(req,res){
         if (checkTeacher.length === 1) {
             new Result(checkTeacher,'账号名已存在,请重新尝试').success(res)
         } else {
-                newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID).then((result) => {
-                    new Result(result,'新增账号成功').success(res)
-                }).catch( (err) => { 
-                    console.log(err);
-                })
+            newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID).then((result) => {
+                new Result(result,'新增教师账号成功，请刷新页面').success(res)
+            }).catch( (err) => { 
+                new Result('新增教师账号失败，请检查连接').fail(res)
+            })
         }
     }).catch( (err) => {
         console.log(err);
@@ -58,12 +58,12 @@ router.post('/deleteTeacher',function(req,res){
     queryTeacherAccount(deleteTeacherAccountName).then( ( exitTeacher ) => {
         if ( exitTeacher.length === 0 ) {
             deleteTeacherAccount(deleteTeacherAccountName).then( (result) => {
-                new Result(result,'删除成功').success(res)
+                new Result(result,'删除成功,，请刷新页面！').success(res)
             }).catch( (err) => {
                 new Result('删除失败').fail(err)
             })
         } else {
-            new Result('删除账号存在相关选题存在，无法删除').success(res)
+            new Result('删除账号存在相关选题存在，禁止删除账号！').success(res)
         }
     })
 })

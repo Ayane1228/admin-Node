@@ -42,9 +42,9 @@ router.get('/teacherInformation', function(req,res){
 router.post('/adminChangeInf',function(req,res) {
     changeAdminInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice)
         .then( (results) => {
-            new Result('修改管理员信息成功').success(res)
+            new Result('修改管理员信息成功，请刷新页面').success(res)
         }).catch( (errors) => {
-            new Result('修改管理员信息成功').fail(res)
+            new Result('修改管理员信息失败，请重试').fail(res)
         })
 })
 
@@ -52,9 +52,9 @@ router.post('/adminChangeInf',function(req,res) {
 router.post('/teacherChangeInf',function(req,res) {
     changeTeachertInf(req.body.trueName,req.body.newPhone,req.body.newEmail,req.body.newOffice,req.body.newTeacherrank)
         .then( (result) => {
-            new Result('修改教师信息成功').success(res)
+            new Result('修改教师信息成功,请刷新页面').success(res)
         }).catch( (errors) => {
-            new Result('修改教师信息失败').fail(res)
+            new Result('修改教师信息失败，请重试').fail(res)
         })
 })
 
@@ -62,12 +62,15 @@ router.post('/teacherChangeInf',function(req,res) {
 router.post('/changeTeacherPassword',function(req,res) {
     const teacherUsername = req.user.username
     const teacherPassword = req.body.value;
-    newStudentPassword(teacherUsername,teacherPassword).then( (response) => {
+    console.log(teacherUsername);
+    console.log(teacherPassword);
+    newTeacherPassword(teacherUsername,teacherPassword).then( (response) => {
         new Result(response,'教师修改密码成功').success(res)
     }).catch( (err) => {
         new Result('教师修改密码失败').fail(res)
     })
 })
+
 // 学生获得个人信息并判断是否为管理员
 router.get('/studentInformation',function(req,res){
     // 判断是否为管理员

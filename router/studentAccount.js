@@ -4,10 +4,10 @@
 const express = require('express')
 const Result = require('../models/Result')
 const { 
-    checkAccount,
-    findStudent,newStudentPassword,newStudentAccount,
-    deleteStudentAccount,queryStudentAccount 
-        } = require('../service/account')
+        checkAccount,
+        findStudent,newStudentPassword,newStudentAccount,
+        deleteStudentAccount,queryStudentAccount 
+     } = require('../service/account')
 const router = express.Router()
 
 
@@ -27,10 +27,10 @@ router.get('/showStudentAccount', function (req,res) {
 router.post('/changeStudentAccount', function (req,res) {
     const studentUsername = req.body.studentUsername
     const studentPassword = req.body.value;
-    newStudentPassword(studentUsername,studentPassword).then( (res) => {
-        console.log(res);
+    newStudentPassword(studentUsername,studentPassword).then( (results) => {
+        new Result(results,'修改密码成功,请刷新页面').success(res)
     }).catch( (err) => {
-        console.log(err);
+        new Result('修改密码失败').fail(res)
     })
 })
 

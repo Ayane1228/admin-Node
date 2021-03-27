@@ -5,8 +5,8 @@
 const express = require('express')
 const Result = require('../models/Result')
 const 
-    {   showAddSelect,addSelect,allSelect,ifStudent,
-        choiceSelect,cancelSelect,
+    {   showAddSelect,addSelect,allSelect,ifStudent,searchSelect,
+        choiceSelect,cancelSelect,repeatSelect,
         teacherSelect,cancelStudent,
         deleteSelect,pickStudent,studentSelect
      }  = require('../service/select')
@@ -34,8 +34,16 @@ router.get('/showSelect', function (req,res) {
 // 教师选题
 router.post('/addSelect',function (req,res) {
     const result = req.body
-    addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent,req.user.username).then( (res) => {
-        console.log(res);
+    repeatSelect(result.newTitle).then( (ifRepeat) => {
+        if( ifRepeat.length != 0 ){
+            new Result(ifRepeat,'已有相同选题').success(res)
+        } else {
+        addSelect(result.newTitle,result.teacherName,result.newMajor,result.newContent,req.user.username).then( (results) => {
+            new Result(results,'添加选题成功,请刷新页面').success(res)
+        }).catch( (error) => {
+            new Result(error,'添加选题失败').fail(res)
+        })
+        }
     }).catch( (err) => {
         console.log(err);
     })
@@ -49,6 +57,20 @@ router.get('/allSelect',function(req,res) {
             new Result(allSelect,'获取选题成功').success(res)
         } else {
             new Result('获取选题失败').fail(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+
+// 搜索课题
+router.post('/searchSelect',function(req,res) {
+    const teacherName = req.body.teacherName
+    searchSelect(teacherName).then( (result) => {
+        if( result.length === 0 ){
+            new Result(result,'无结果').success(res)
+        } else {
+            new Result(result,'查询成功').success(res)
         }
     }).catch( (err) => {
         console.log(err);
@@ -96,6 +118,7 @@ router.get('/cancelSelect',function(req,res){
         console.log(err);
     })
 })
+
 // 教师查看选题
 router.get('/teachersSelect',function(req,res){    
     const allTSelect = teacherSelect(req.user.username)
@@ -112,19 +135,21 @@ router.get('/teachersSelect',function(req,res){
 
 // 教师拒绝学生
 router.post('/cancelStudent',function(req,res) {
+    console.log(req);
     const selectTitle = req.body.row.title
-    cancelStudent(selectTitle).then( (res) => {
-        console.log(res);
+    cancelStudent(selectTitle).then( (reresults) => {
+        new Result(results,'取消选择学生成功，请刷新页面！').success(res)
     }).catch( (err) => {
         console.log(err);
+        new Result('取消选择学生失败，请重试').fail(res)
     })
 })
 
 // 教师删除选题
 router.post('/deleteSelect',function(req,res) {
     const deleteTitle = req.body.row.title
-     deleteSelect(deleteTitle).then( (res) => {
-         console.log(res);
+     deleteSelect(deleteTitle).then( (results) => {
+        new Result(results,'查询je')
      }).catch( (err) => {
          console.log(err);
      })

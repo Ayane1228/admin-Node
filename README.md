@@ -1131,6 +1131,65 @@ logout({ commit, state, dispatch }) {
    > }
    > ```
 
+## 公告分页器
+
+将 表格数据和分页器相连`:data="list.slice((currentPage - 1) * pagesize, currentPage*pagesize)"`:
+
+> slice() 方法可从已有的数组中返回选定的元素。（不包括end元素）
+>
+> ```js
+> arrayObject.slice(start,end)
+> ```
+>
+> | 参数  | 描述                                                         |
+> | :---- | :----------------------------------------------------------- |
+> | start | 必需。规定从何处开始选取。如果是负数，那么它规定从数组尾部开始算起的位置。也就是说，-1 指最后一个元素，-2 指倒数第二个元素，以此类推。 |
+> | end   | 可选。规定从何处结束选取。该参数是数组片断结束处的数组下标。如果没有指定该参数，那么切分的数组包含从 start 到数组结束的所有元素。如果这个参数是负数，那么它规定的是从数组尾部开始算起的元素。 |
+>
+> ### 返回值
+>
+> 返回一个新的数组，包含从 start 到 end （不包括该元素）的 arrayObject 中的元素。
+
+```vue
+        <el-table
+        :data="list.slice((currentPage - 1) * pagesize, currentPage*pagesize)"
+        stripe
+        fit
+        highlight-current-row
+        style="width: 100%">
+```
+
+这里指当前表格的截取的数据为`list`数组中从当前页的前一页（currentPage - 1）的规定好的数据数（pagesize）到当前页的数据数。（不包括最后一个（end）数据）。
+
+> 例如：当前为第1页，数据则为0~9即`list`数组中前10个的数据。
+>
+> 当前为第2页，数据则为10到19的数据。
+
+​		
+
+```html
+      <!-- 分页器 -->
+      <!-- current-change	当前页currentPage 改变时会触发	 -->
+      <!-- layout，表示需要显示的内容，用逗号分隔，布局元素会依次显示。prev表示上一页，next为下一页，pager表示页码列表	-->
+      <!-- total表示总条目数（可以用来设置总共的页数：页数 = total / pagesize） -->
+      <div class="pagination">
+        <el-pagination
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-size="pagesize"
+          layout="prev, pager, next"
+          :total="100">
+        </el-pagination>
+      </div>
+```
+
+```js
+pagesize: 10, //设置每页显示条目个数为10
+currentPage: 1, //设置当前页默认为1
+```
+
+
+
 ## 修改通知changenotice（admin）
 
 在前段中设置各个页面的访问权限。在`router/index.js`文件中定义路由的相关信息，以`http://localhost:9527/#/notice/changenotice`为例。
@@ -1881,9 +1940,192 @@ function ifStudent(username) {
     }
 ```
 
+分页器同首页分页器。
+
+#### 模糊搜索
+
+将按钮放在表格的表头中，点击之后设置对话框`dialog`为true（打开对话框），对话框中是一个表格，绑定数据到`resultSelect`上，并在点击时先重置数组，再请求接口将数据`push`到数组中。并开启dialog的回调函数 判断是否是学生账号,若不是学生账号，遍历数组（`array.map（）`）将所有数组元素的`istrue`置为不可选。
+
+```vue
+          <!-- 搜索 -->
+          <el-table-column
+            align="right">
+            <template slot="header" slot-scope="{}">
+              <el-input
+                v-model="search"
+                size="mini"
+                placeholder="输入教师姓名进行搜索">
+                <el-button
+                  @click="searchInput(search)" 
+                  slot="append" 
+                  icon="el-icon-search"></el-button>
+              </el-input>
+            </template>
+          </el-table-column>
+```
 
 
 
+```vue
+      <el-dialog 
+        title="查询结果" 
+        width='65%'
+        :visible.sync="dialogTableVisible"
+        @open="dialogOpen">
+        <el-table :data="resultSelect">
+            <!-- 展开部分 -->
+            <el-table-column type="expand">
+              <template slot-scope="props">
+                <el-form label-position="left"  class="demo-table-expand">
+                  <el-form-item label="课题名称" >
+                    <span>{{ props.row.title }}</span>
+                  </el-form-item>
+                  <el-form-item label="指导教师">
+                    <span>{{ props.row.teachername }}</span>
+                  </el-form-item>
+                  <el-form-item label="教师职称">
+                    <span>{{ props.row.teacherrank }}</span>
+                  </el-form-item>
+                  <el-form-item label="教师联系方式">
+                    <span>{{ props.row.phone }}</span>
+                  </el-form-item>
+                  <el-form-item label="教师邮箱">
+                    <span>{{ props.row.email }}</span>
+                  </el-form-item>
+                  <el-form-item label="所需专业">
+                    <span>{{ props.row.needmajor }}</span>
+                  </el-form-item>
+                  <el-form-item label="课题描述">
+                    <span>{{ props.row.content }}</span>
+                  </el-form-item>
+                </el-form>
+              </template>
+            </el-table-column>
+            <!-- 选题 -->
+            <el-table-column
+              prop="title"
+              label="选题"
+              width="150">
+            </el-table-column>
+            <!-- 指导教师 -->
+            <el-table-column
+              prop="teachername"
+              label="指导教师"
+              width="150">
+            </el-table-column>
+            <!-- 职称 -->
+            <el-table-column
+              prop="teacherrank"
+              label="教师职称"
+              width="150">
+            </el-table-column>
+            <!-- 专业 -->
+            <el-table-column
+              prop="needmajor"
+              label="专业要求"
+              width="150">
+            </el-table-column>
+            <!-- 是否可选 -->
+            <el-table-column
+              prop="isTrue"
+              width="150"
+              label="当前是否可选">
+              <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.istrue =='可选' ? 'success' : 'danger'" >
+                  {{scope.row.istrue}}
+              </el-tag>
+              </template>
+            </el-table-column>
+            <!-- 确认选择 -->
+            <el-table-column
+              prop="submit"
+              label="确认选择"
+              width="150">
+              <template slot-scope="scope">
+                <el-button 
+                    type="primary" 
+                    @click="submit(scope.row)" 
+                    :disabled="scope.row.istrue == '不可选'"
+                  >确认选择
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+      </el-dialog>
+```
+
+```js
+    // 查询选题
+    searchInput(search) {
+      // 重新将数组赋为空
+      this.$data.resultSelect = [] 
+      const that = this
+      const teacherName = search
+      const token = this.header
+      axios({
+        method:'post',
+        url:'http://localhost:18082/select/searchSelect',
+        headers:{ Authorization:token.Authorization },
+        data:{ teacherName } 
+      }).then( (res) => {
+          if (res.data.msg === '无结果') {
+            this.$message.warning('查询不到相关选题，请重新输入教师姓名重试')
+          } else {
+                res.data.data.map( (item) => {
+                  that.$data.resultSelect.push(item)
+                })
+                this.$message.success('查询成功') 
+                that.$data.dialogTableVisible = true
+            
+          }
+      }).catch( (err) => {
+        console.log(err);
+      })
+    },
+    // 开启dialog的回调函数 判断是否是学生账号,0为学生账号，1为教师账号或管理员
+    dialogOpen(){
+      if( this.$data.isStudent === 0) {
+        return
+      } else {
+        this.$data.resultSelect.map( (item) =>{
+          item.istrue = '不可选'
+        })
+      }
+    }
+```
+
+后端接口处理，在查询数据库的时候使用`%like%`进行模糊查询。
+
+```js
+// 搜索课题
+router.post('/searchSelect',function(req,res) {
+    const teacherName = req.body.teacherName
+    searchSelect(teacherName).then( (result) => {
+        if( result.length === 0 ){
+            new Result(result,'无结果').success(res)
+        } else {
+            new Result(result,'查询成功').success(res)
+        }
+    }).catch( (err) => {
+        console.log(err);
+    })
+})
+```
+
+```js
+// 查询选题信息
+function searchSelect(teacherName){
+	return querySql(`
+	SELECT
+	* 
+	FROM
+		select_table 
+	WHERE
+		teachername LIKE '%${teacherName}%'
+	`)
+}
+```
 
 
 
@@ -3037,7 +3279,7 @@ router.post('/choiceSelect',function(req,res) {
 
 错误：执行sql语句报错`ERR_HTTP_INVALID_STATUS_CODE`
 
-解决：send()中的参数如果为数字，会默认为状态码，当传的数值不存在状态码中，会报无效状态码的错误。
+解决：`send()`的内容不能是数字，send()中的参数如果为数字，会默认为状态码，当传的数值不存在状态码中，会报无效状态码的错误。
 
 修改`res.send()`的内容
 
@@ -3055,7 +3297,37 @@ studentSelect.vue?42f2:143 TypeError: Cannot read property 'title' of undefined
 > 使用{{}}文本插值方式，通过.级联显示内容。如下代码，foo通过后端接口返回。
 > 后端内容返回之前，控制台会Cannot read property ‘xxx’ of undefined的错误。
 
+
+
+waring:
+
+```
+vue-router.esm.js?081a:16 [vue-router] Duplicate named routes definition: { name: "accountManagement", path: "/account/teacherAccount" }
+warn @ vue-router.esm.js?081a:16
+```
+
+翻译：重复命名路由定义：{name:“accountManagement”，路径：“/account/teacherAccount”}
+
+检查`router/index.js`，发现两条路由信息中的`name`重复。修改属性。
+
+
+
+报错：发布公告之后报错
+
+```js
+Uncaught (in promise) TypeError: _this2.$message(...).catch is not a function
+    at eval
+```
+
+翻译：
+
 ```
 
 ```
+
+
+
+
+
+
 
