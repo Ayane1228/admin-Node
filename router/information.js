@@ -61,9 +61,7 @@ router.post('/teacherChangeInf',function(req,res) {
 // 教师修改密码
 router.post('/changeTeacherPassword',function(req,res) {
     const teacherUsername = req.user.username
-    const teacherPassword = req.body.value;
-    console.log(teacherUsername);
-    console.log(teacherPassword);
+    const teacherPassword = req.body.newPassword;
     newTeacherPassword(teacherUsername,teacherPassword).then( (response) => {
         new Result(response,'教师修改密码成功').success(res)
     }).catch( (err) => {
@@ -103,7 +101,7 @@ router.post('/studentChangeInf',function(req,res) {
 // 学生修改密码
 router.post('/changeStudentPassword',function(req,res) {
     const studentUsername = req.user.username
-    const studentPassword = req.body.value;
+    const studentPassword = req.body.newPassword;
     newStudentPassword(studentUsername,studentPassword).then( (response) => {
         new Result(response,'学生修改密码成功').success(res)
     }).catch( (err) => {
