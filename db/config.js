@@ -5,7 +5,7 @@ module.exports = {
     // 数据库用户名
     user: 'root',
     // 密码
-    password: 'root',
+    password: '',
     // 数据库名
     database: 'db'
   }

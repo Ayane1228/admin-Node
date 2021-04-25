@@ -5,7 +5,8 @@ function findAdminInformation() {
     return querySql(`
             SELECT 
             truename,teacherID,phone,email,office,teacherrank 
-            FROM adminaccount
+            FROM teacheraccount
+            WHERE teacheraccount.username = 'admin'
         `)
 }
 

@@ -103,7 +103,9 @@ function repeatSelect(selectTitle){
 // 教师创建新选题
 function addSelect(newTitle,teacherName,newMajor,newContent,teacheraccount){
     return querySql(`
-			INSERT INTO select_table ( id, title, teacheraccount,teachername, needmajor, content, istrue, pick )
+			INSERT INTO 
+				select_table 
+				( id, title, teacheraccount,teachername, needmajor, content, istrue, pick )
 			VALUES
 				( id, '${newTitle}','${teacheraccount}', '${teacherName}', '${newMajor}', '${newContent}', '可选', '待确认' )
     `)

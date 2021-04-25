@@ -4,9 +4,17 @@ const { querySql,queryOne} = require('../db')
 // 查询学生信息
 function findStudent() {
     return querySql(`
-            SELECT 
-            username,password,truename,studentID,classID,college,major
-            FROM studentaccount
+            SELECT
+            studentaccount.username,
+            user.password,
+            studentaccount.truename,
+            studentaccount.studentID,
+            studentaccount.classID,
+            studentaccount.college,
+            studentaccount.major
+          FROM
+          studentaccount
+            LEFT OUTER JOIN user ON studentaccount.username = user.username
             `)
 }
 
@@ -14,14 +22,11 @@ function findStudent() {
 function newStudentPassword(studentUsername,studentPassword) {
   return querySql(`
           UPDATE 
-          studentaccount,user
+          user
           SET 
-          studentaccount.password = '${studentPassword}',
-          user.password = '${studentPassword}'
+          password = '${studentPassword}'
           WHERE 
-          studentaccount.username = '${studentUsername}'
-          AND 
-          user.username = '${studentUsername}'
+          username = '${studentUsername}'
           `)
 }
 
@@ -38,9 +43,9 @@ function newStudentAccount(newSAccount,newSPassword,newSName,newStudentID,newStu
   return queryOne(`
           INSERT INTO 
           studentaccount 
-          (id,username,password,truename,studentID,classID,college,major) 
+          (id,username,truename,studentID,classID,college,major) 
           VALUES 
-          (id,'${newSAccount}','${newSPassword}','${newSName}','${newStudentID}','${newStudentClassID}','${newStudentCollage}','${newStudentMajor}');
+          (id,'${newSAccount}','${newSName}','${newStudentID}','${newStudentClassID}','${newStudentCollage}','${newStudentMajor}');
           INSERT INTO 
           user 
           (id,username,password,role) 
@@ -76,10 +81,15 @@ function deleteStudentAccount(deleteStudentAccountName){
 // 查看教师账号
 function findTeacher() {
   return querySql(`
-          SELECT 
-          username,password,truename,teacherID,teacherrank 
-          FROM 
+          SELECT
+          teacheraccount.username,
+          user.password,
+          teacheraccount.truename,
+          teacheraccount.teacherID,
+          teacheraccount.teacherrank
+        FROM
           teacheraccount
+          LEFT OUTER JOIN user ON teacheraccount.username = user.username
           `)
 }
 
@@ -87,14 +97,11 @@ function findTeacher() {
 function newTeacherPassword(teacherUsername,teacherPassword) {
   return querySql(`
           UPDATE 
-          teacheraccount,user 
+          user 
           SET 
-          teacheraccount.password = '${teacherPassword}',
-          user.password = '${teacherPassword}'
+          password = '${teacherPassword}'
           WHERE 
-          teacheraccount.username = '${teacherUsername}' 
-          AND 
-          user.username = '${teacherUsername}'
+          username = '${teacherUsername}'
           `)
 }
 

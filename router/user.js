@@ -53,7 +53,7 @@ function(req,res,next){
         PRIVATE_KEY,
         { expiresIn: JWT_EXPIRED }
       )
-      // 将Token传给前端保存到Local Strage中
+      // 将Token传给前端保存
       new Result({ token }, '登录成功').success(res)
       }
     })
