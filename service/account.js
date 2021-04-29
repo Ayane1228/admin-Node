@@ -119,7 +119,7 @@ function queryTeacherAccount(deleteTeacherAccountName) {
 function deleteTeacherAccount(deleteTeacherAccount) {
   return queryOne(`
           DELETE FROM 
-          teacherAccount 
+          teacheraccount 
           WHERE 
           username = '${deleteTeacherAccount}';
           DELETE FROM 
@@ -133,10 +133,10 @@ function deleteTeacherAccount(deleteTeacherAccount) {
 function newTeacherAccount(newTAccount,newTPassword,newTName,newTeacherID){
   return queryOne(`
           INSERT INTO 
-          teacherAccount 
-          (id,username,password,truename,teacherID) 
+          teacheraccount 
+          (id,username,truename,teacherID) 
           VALUES 
-          (id,'${newTAccount}', '${newTPassword}','${newTName}','${newTeacherID}');
+          (id,'${newTAccount}','${newTName}','${newTeacherID}');
           INSERT INTO user 
           (id,username,password,role) 
           VALUES 
