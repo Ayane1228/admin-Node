@@ -137,7 +137,7 @@ router.get('/teachersSelect',function(req,res){
 router.post('/cancelStudent',function(req,res) {
     console.log(req);
     const selectTitle = req.body.row.title
-    cancelStudent(selectTitle).then( (reresults) => {
+    cancelStudent(selectTitle).then( (results) => {
         new Result(results,'取消选择学生成功，请刷新页面！').success(res)
     }).catch( (err) => {
         console.log(err);
